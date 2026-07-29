@@ -125,6 +125,9 @@ ddev wp eval-file bin/verify-search-corpus.php epfr-profile-baseline --path=word
 
 ## Fonctionnement
 
+Détail de la chaîne d’analyse (ordre des filtres, mode dual, fuzziness) :
+[`docs/french-search-algorithm.md`](docs/french-search-algorithm.md).
+
 Le plugin s'accroche aux filtres natifs d'ElasticPress, sans surcharger ni dupliquer
 son coeur :
 
@@ -222,6 +225,10 @@ Liste classée par utilité pour comprendre et étendre cet addon :
 5. **[ASCII Folding et `_analyze` (Aymeric Lagier)](https://aymericlagier.com/2016/05/04/ascii-folding-dans-elasticsearch-et-appel-de-_analyze/)** — diagnostic via l’API `_analyze`.
 6. **[Elasticsearch: The Definitive Guide — Languages (O'Reilly)](https://www.oreilly.com/library/view/elasticsearch-the-definitive/9781449358532/part03ch01.html)** — pédagogique mais **historique** (ES 1.x/2.x) : l’affirmation selon laquelle le french retire les diacritiques ne correspond plus à l’implémentation actuelle (pas d’asciifolding dans le french stock).
 7. **[Discuss — Language analyzer en français](https://discuss.elastic.co/t/language-analyzer-en-francais/41045)** / **[Google Groups elasticsearch-fr](https://groups.google.com/g/elasticsearch-fr/c/MLYdicQ0xGo)** — compléments communautaires (pièges de config, démarche `_analyze`).
+
+## Changelog
+
+Historique des versions : [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Licence
 

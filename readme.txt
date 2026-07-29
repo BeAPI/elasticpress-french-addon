@@ -84,6 +84,8 @@ chaque site du réseau.
 
 == Changelog ==
 
+Historique détaillé (GitHub) : https://github.com/beapi/elasticpress-french-addon/blob/main/CHANGELOG.md
+
 = 1.0.0 =
 * Version initiale : asciifolding, élision, stemmer configurable, fuzziness, stopwords additionnels.
 * stem_exclusion (keyword_marker) et mode dual light/heavy optionnel.
