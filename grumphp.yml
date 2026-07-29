@@ -18,5 +18,3 @@ grumphp:
     phpcs:
       standard: ['phpcs.xml']
       triggered_by: [php]
-      testsuites: []
-      extensions: []
