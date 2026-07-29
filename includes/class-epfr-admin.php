@@ -51,7 +51,7 @@ class Admin {
 	}
 
 	/**
-	 * Warn on the ElasticPress Settings screen that Language is overridden.
+	 * Warn on the ElasticPress Settings screen that stopwords are forced to French.
 	 *
 	 * @param  array<string, array<string, mixed>> $notices ElasticPress admin notices.
 	 * @return array<string, array<string, mixed>>
@@ -76,7 +76,7 @@ class Admin {
 		$notices['epfr_language_forced'] = [
 			'html'    => sprintf(
 				/* translators: %s: URL to the French Addon settings screen */
-				__( 'ElasticPress French Addon is active: the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the Language setting below. <a href="%s">Manage French Addon settings</a>.', 'elasticpress-french-addon' ),
+				__( 'ElasticPress French Addon is active: the stopwords list is forced to <code>_french_</code>, regardless of the Language setting below. <a href="%s">Manage French Addon settings</a>.', 'elasticpress-french-addon' ),
 				esc_url( $addon_url )
 			),
 			'type'    => 'warning',
@@ -171,7 +171,7 @@ class Admin {
 					<code>wp elasticpress index --setup --network-wide</code>
 				</p>
 				<p>
-		<?php esc_html_e( 'While the addon is enabled, the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the ElasticPress Language setting.', 'elasticpress-french-addon' ); ?>
+		<?php esc_html_e( 'While the addon is enabled, the stopwords list is forced to _french_, regardless of the ElasticPress Language setting.', 'elasticpress-french-addon' ); ?>
 				</p>
 			</div>
 
@@ -283,7 +283,7 @@ class Admin {
 								<input type="checkbox" name="<?php echo esc_attr( EPFR_OPTION_KEY ); ?>[dual_analyzers]" value="1" <?php checked( ! empty( $settings['dual_analyzers'] ) ); ?> />
 								<?php esc_html_e( 'Use a light analyzer on main text fields (precision) and a heavy stemmed analyzer on .stemmed multi-fields (recall)', 'elasticpress-french-addon' ); ?>
 							</label>
-							<p class="description"><?php esc_html_e( 'Inspired by the dual french_light / french_heavy approach. Applies to post_title, post_content, and post_excerpt. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex.', 'elasticpress-french-addon' ); ?></p>
+							<p class="description"><?php esc_html_e( 'Inspired by the dual french_light / french_heavy approach. Applies to the posts index only (post_title, post_content, post_excerpt). Other indexables (terms, comments, users) keep a full stemmed chain. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex.', 'elasticpress-french-addon' ); ?></p>
 						</td>
 					</tr>
 

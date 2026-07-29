@@ -2,7 +2,7 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ElasticPress French Addon 1.0.0\n"
+"Project-Id-Version: ElasticPress French Addon 1.0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/beapi/elasticpress-french-addon/issues\n"
 "POT-Creation-Date: 2026-07-28 14:00+0000\n"
 "PO-Revision-Date: 2026-07-28 14:00+0000\n"
@@ -40,12 +40,12 @@ msgid "Any change below only applies to new indexes. A full reindex is required 
 msgstr "Toute modification ci-dessous ne s’applique qu’aux nouveaux index. Une réindexation complète est obligatoire après enregistrement :"
 
 #: includes/class-epfr-admin.php
-msgid "While the addon is enabled, the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the ElasticPress Language setting."
-msgstr "Tant que l’extension est activée, la langue de l’analyzer Elasticsearch est forcée en français (mots vides inclus), indépendamment du réglage de langue d’ElasticPress."
+msgid "While the addon is enabled, the stopwords list is forced to _french_, regardless of the ElasticPress Language setting."
+msgstr "Tant que l’extension est activée, la liste de mots vides est forcée sur _french_, indépendamment du réglage de langue d’ElasticPress."
 
 #: includes/class-epfr-admin.php
-msgid "ElasticPress French Addon is active: the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the Language setting below. <a href=\"%s\">Manage French Addon settings</a>."
-msgstr "ElasticPress French Addon est actif : la langue de l’analyzer Elasticsearch est forcée en français (mots vides inclus), indépendamment du réglage de langue ci-dessous. <a href=\"%s\">Gérer les réglages French Addon</a>."
+msgid "ElasticPress French Addon is active: the stopwords list is forced to <code>_french_</code>, regardless of the Language setting below. <a href=\"%s\">Manage French Addon settings</a>."
+msgstr "ElasticPress French Addon est actif : la liste de mots vides est forcée sur <code>_french_</code>, indépendamment du réglage de langue ci-dessous. <a href=\"%s\">Gérer les réglages French Addon</a>."
 
 #: includes/class-epfr-admin.php
 msgid "Addon enabled"
@@ -144,8 +144,8 @@ msgid "Use a light analyzer on main text fields (precision) and a heavy stemmed 
 msgstr "Utiliser un analyzer léger sur les champs texte principaux (pertinence) et un analyzer heavy stémmé sur les multi-fields .stemmed (rappel)"
 
 #: includes/class-epfr-admin.php
-msgid "Inspired by the dual french_light / french_heavy approach. Applies to post_title, post_content, and post_excerpt. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
-msgstr "Inspiré de l’approche duale french_light / french_heavy. S’applique à post_title, post_content et post_excerpt. Les requêtes de recherche incluent automatiquement les champs .stemmed avec un boost réduit. Sans effet si le stemmer est sur Aucun. Réindexation complète obligatoire."
+msgid "Inspired by the dual french_light / french_heavy approach. Applies to the posts index only (post_title, post_content, post_excerpt). Other indexables (terms, comments, users) keep a full stemmed chain. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
+msgstr "Inspiré de l’approche duale french_light / french_heavy. S’applique uniquement à l’index des publications (post_title, post_content, post_excerpt). Les autres indexables (terms, comments, users) conservent une chaîne complète avec stemming. Les requêtes de recherche incluent automatiquement les champs .stemmed avec un boost réduit. Sans effet si le stemmer est sur Aucun. Réindexation complète obligatoire."
 
 #: includes/class-epfr-admin.php
 msgid "Verify the result"

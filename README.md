@@ -9,25 +9,28 @@ Inspiré de la [documentation officielle des language analyzers](https://www.ela
 (chaîne `french` : élision, stop, `keyword_marker`, stemmer `light_french`) et de l’article
 [Construire un bon analyzer français pour Elasticsearch](https://jolicode.com/blog/construire-un-bon-analyzer-francais-pour-elasticsearch)
 (JoliCode). On part de cette base officielle, puis on **ajoute** volontairement
-l’`asciifolding` — absent de l’analyzer `french` natif — pour gérer accents et ligatures
-(`haïti`/`haiti`, `bœuf`/`boeuf`).
+l’`asciifolding` — absent de l’analyzer `french` natif — *après* les stopwords et
+*avant* le stemming, pour gérer accents et ligatures (`haïti`/`haiti`, `bœuf`/`boeuf`)
+sans casser la liste `_french_`.
 
-**Prérequis :** WordPress 6.2+, PHP 8.0+, et le plugin [ElasticPress](https://wordpress.org/plugins/elasticpress/).
+**Prérequis :** WordPress 6.5+, PHP 8.0+, et le plugin [ElasticPress](https://wordpress.org/plugins/elasticpress/).
 
 ## Le problème
 
-Le mapping ElasticPress par défaut n'est pas pensé pour le français :
+Le mapping ElasticPress par défaut (EP ≥ 4, mappings `5-2` / `7-0`+) n'est pas optimisé
+pour le français :
 
-- l'`asciifolding` n'est présent que dans un `normalizer` de type `keyword`, jamais dans la
-  chaîne d'analyse `text` réellement utilisée par la recherche full-text ;
+- `ep_asciifolding` est déjà présent sur `default` / `default_search`, mais **après**
+  `ewp_snowball` → le stemming travaille sur des formes accentuées ;
 - le stemmer par défaut est un `snowball` French, réputé agressif (troncature fréquente à
   4-5 lettres), qui crée des collisions entre mots sans rapport ;
 - aucune gestion de l'élision française.
 
 Symptôme typique observé en production : une recherche sans accent (`?s=haiti`) remonte des
 résultats hors sujet ("haine", "haute", "fait"), alors que la même recherche avec accent
-(`?s=haïti`) fonctionne correctement. Diagnostic complet reproductible via l'API `_analyze`
-d'Elasticsearch.
+(`?s=haïti`) fonctionne correctement. Ce n'est pas dû à l'absence d'asciifolding, mais à
+l'ordre Snowball-avant-folding et à l'agressivité du stemmer. Diagnostic complet
+reproductible via l'API `_analyze` d'Elasticsearch.
 
 ## Installation
 
@@ -131,6 +134,7 @@ Scripts Composer utiles :
 | `ddev composer setup:plugins` | Symlink + activation des plugins, Query Monitor et EP Debugging |
 | `ddev composer setup:ep` | Configure le host ES et relance la sync |
 | `ddev composer cs` | Vérifie les WordPress Coding Standards (PHPCS) |
+| `ddev composer test` | Lance les tests unitaires PHPUnit (`build_analyzer` / `build_filters`) |
 | `ddev composer cbf` | Corrige automatiquement ce que PHPCBF peut fixer |
 | `ddev composer fetch:bulk` | Télécharge ~980 extraits Wikipédia FR (CC BY-SA) |
 | `ddev composer seed:corpus` | Crée ~1000 posts de test (pièges + bulk) |
@@ -139,7 +143,7 @@ Scripts Composer utiles :
 | `ddev composer compare:corpus` | Compare baseline (addon off) vs addon (2× sync) |
 
 Les hooks Git de qualité (GrumPHP) s’installent avec Composer. Sur une PR, le workflow
-`.github/workflows/quality.yml` lance `composer validate` et `composer cs`.
+`.github/workflows/quality.yml` lance `composer validate`, `composer cs` et `composer test`.
 Un tag Git déclenche une release GitHub avec le ZIP (`.github/workflows/release-version.yml`) ;
 le fichier `.distignore` exclut les artefacts de développement du package.
 
@@ -194,10 +198,10 @@ son coeur :
 
 | Filtre ElasticPress | Usage dans ce plugin |
 |---|---|
-| `ep_config_mapping` | Injecte `asciifolding`, `elision`, stemmer, stopwords additionnels, `stem_exclusion` ; en mode dual, `default`/`default_search` restent light et `epfr_heavy` sert aux multi-fields |
+| `ep_config_mapping` | Injecte `asciifolding` (après stop), `elision`, stemmer, stopwords additionnels, `stem_exclusion` ; en mode dual sur l’index **posts**, `default`/`default_search` restent light et `epfr_heavy` sert aux multi-fields ; les autres indexables gardent une chaîne full |
 | `ep_post_mapping` | En mode dual, ajoute les multi-fields `.stemmed` sur `post_title`, `post_content`, `post_excerpt` |
-| `ep_formatted_args` (prio 25) | En mode dual, injecte les champs `.stemmed` (boost réduit) dans les `multi_match` **après** le weighting ElasticPress (prio 20), qui sinon les supprimerait |
-| `ep_analyzer_language` | Force la langue Elasticsearch à `french` (stopwords `_french_`, snowball `French`) tant que l'addon est activé, indépendamment du réglage ElasticPress Language |
+| `ep_formatted_args` (prio 25) | En mode dual, injecte les champs `.stemmed` (boost réduit, filtrable via `epfr_stemmed_boost_factor`) dans les `multi_match` **après** le weighting ElasticPress (prio 20), qui sinon les supprimerait |
+| `ep_analyzer_language` | Force la liste de stopwords `_french_` (`filter_ep_stop`) tant que l'addon est activé |
 | `ep_post_fuzziness_arg` | Permet de fixer la fuzziness des requêtes (auto / 0 / 1 / 2) |
 
 Un filtre `epfr_mapping` reste disponible pour les ajustements avancés (ex. `stemmer_override`).
@@ -236,7 +240,7 @@ ElasticPress est en mode `EP_IS_NETWORK`), ou directement en base via `epfr_sett
 - `fuzziness` (`auto` | `0` | `1` | `2`) : tolérance aux fautes de frappe.
 - `extra_stopwords` (string, séparé par virgules) : mots additionnels à ignorer.
 - `stem_exclusion` (string, séparé par virgules) : mots exclus du stemming (`keyword_marker`), ex. `croix` pour éviter la collision « La Croix » / « croissant ».
-- `dual_analyzers` (bool, défaut `false`) : analyzer light sur les champs principaux (pertinence) + heavy stémmé sur `.stemmed` (rappel). Opt-in ; réindex `--setup` obligatoire.
+- `dual_analyzers` (bool, défaut `false`) : analyzer light sur les champs posts principaux (pertinence) + heavy stémmé sur `.stemmed` (rappel). Opt-in, **index posts uniquement** ; réindex `--setup` obligatoire.
 
 ## Important
 

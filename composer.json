@@ -2,7 +2,6 @@
     "name": "beapi/elasticpress-french-addon",
     "description": "ElasticPress addon that improves Elasticsearch analysis for French content.",
     "type": "wordpress-plugin",
-    "version": "1.0.0",
     "license": "GPL-2.0-or-later",
     "authors": [
         {
@@ -20,11 +19,12 @@
         "php-parallel-lint/php-parallel-lint": "^1.4",
         "phpcompatibility/php-compatibility": "^9.3",
         "phpro/grumphp-shim": "^1.0 || ^2.7",
+        "phpunit/phpunit": "^9.6",
         "squizlabs/php_codesniffer": "^3.10",
-        "wpackagist-plugin/debug-bar-elasticpress": "*",
-        "wpackagist-plugin/query-monitor": "*",
         "wp-coding-standards/wpcs": "^3.1",
-        "wpackagist-plugin/elasticpress": "^5.3"
+        "wpackagist-plugin/debug-bar-elasticpress": "*",
+        "wpackagist-plugin/elasticpress": "^5.3",
+        "wpackagist-plugin/query-monitor": "*"
     },
     "repositories": [
         {
@@ -54,6 +54,7 @@
     "scripts": {
         "cs": "./vendor/bin/phpcs",
         "cbf": "./vendor/bin/phpcbf",
+        "test": "./vendor/bin/phpunit",
         "setup": [
             "@composer install",
             "@setup:wp",
@@ -92,6 +93,7 @@
     "scripts-descriptions": {
         "cs": "Run PHPCS with the project WordPress coding standards ruleset.",
         "cbf": "Auto-fix PHPCS issues with PHPCBF where possible.",
+        "test": "Run PHPUnit unit tests (no WordPress bootstrap).",
         "setup": "Bootstrap WordPress, ElasticPress, and this addon for local DDEV use.",
         "setup:wp": "Download and install WordPress into wordpress/ if missing.",
         "setup:plugins": "Symlink this addon and activate ElasticPress, Query Monitor, and the debugging addons.",

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] — 2026-07-29
+
+### Fixed
+
+- Place `asciifolding` after `ep_stop` (and remove ghost `ep_asciifolding`) so accented French stopwords from `_french_` are still filtered.
+- Restrict dual light/heavy analyzers to the posts index; other indexables keep a full stemmed chain.
+
+### Changed
+
+- Rewrite the EP ≥ 4 diagnostic: folding already exists on full-text analyzers but sits after Snowball; document the real stop → fold → stem order.
+- `force_analyzer_language` only forces `_french_` for `filter_ep_stop`; admin notices updated accordingly.
+- Pass settings snapshots into `build_analyzer()` / `build_filters()` (no internal `get_option()` round-trips).
+- Bump WordPress requirement to 6.5 (`Requires Plugins` alignment) and `Tested up to` to 6.9.
+- Remove Composer `version` field (Git tags are the source of truth).
+
+### Added
+
+- Filter `epfr_stemmed_boost_factor` (default `0.5`) for dual-mode `.stemmed` query boost.
+- PHPUnit suite for `build_analyzer()` / `build_filters()` (`composer test`), run in CI.
+
 ### Security
 
 - Align network-mode settings with ElasticPress: store `epfr_settings` as a `site_option`, gate the admin UI with `manage_network_elasticpress` (via `Utils\get_network_capability()`), and register the menu under Network Admin when `EP_IS_NETWORK` is active.

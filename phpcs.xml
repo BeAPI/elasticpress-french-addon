@@ -55,7 +55,7 @@
 		<severity>0</severity>
 	</rule>
 
-	<config name="minimum_supported_wp_version" value="6.2"/>
+	<config name="minimum_supported_wp_version" value="6.5"/>
 
 	<rule ref="PHPCompatibility"/>
 	<config name="testVersion" value="8.0-"/>

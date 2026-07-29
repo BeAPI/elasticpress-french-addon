@@ -2,15 +2,15 @@
 /**
  * Plugin core: adjusts the ElasticPress analyzer for correct French handling.
  *
- * Fixes three issues found in the default ElasticPress mapping:
- * 1. asciifolding missing from the "text" chain (only present in a "keyword" normalizer,
- *    so ineffective for full-text search) -> "haiti" and "haïti" produce two different tokens.
- * 2. Overly aggressive "snowball" (French) stemmer, which truncates words to ~4 letters and
- *    creates irrelevant collisions (haine/haute/fait all reduced to a similar root).
+ * Addresses three weaknesses of the default ElasticPress mapping for French:
+ * 1. ep_asciifolding sits after ewp_snowball, so stemming runs on accented forms;
+ *    the aggressive Snowball French stemmer then produces collisions (haine/haute/…).
+ * 2. Overly aggressive "snowball" (French) stemmer, which truncates words to ~4 letters.
  * 3. No handling of French elision (l'article, d'un, qu'il...).
  *
- * Optional dual mode (JoliCode-inspired): light analysis on main text fields for precision,
- * heavy (stemmed) analysis on .stemmed multi-fields for recall.
+ * Optional dual mode (JoliCode-inspired): light analysis on main post text fields for
+ * precision, heavy (stemmed) analysis on .stemmed multi-fields for recall. Dual light
+ * chains apply to the posts index only; other indexables keep a full stemmed chain.
  *
  * @package ElasticPress_French_Addon
  */
@@ -36,7 +36,7 @@ class Analyzer {
 	private const STEMMED_SOURCE_FIELDS = [ 'post_title', 'post_content', 'post_excerpt' ];
 
 	/**
-	 * Relative boost applied to .stemmed fields vs their parent field boost.
+	 * Default relative boost applied to .stemmed fields vs their parent field boost.
 	 */
 	private const STEMMED_BOOST_FACTOR = 0.5;
 
@@ -56,7 +56,7 @@ class Analyzer {
 	 * Hook into ElasticPress filters.
 	 */
 	public function init(): void {
-		add_filter( 'ep_config_mapping', [ $this, 'filter_mapping' ], 20 );
+		add_filter( 'ep_config_mapping', [ $this, 'filter_mapping' ], 20, 2 );
 		add_filter( 'ep_post_mapping', [ $this, 'filter_post_mapping' ], 15 );
 		add_filter( 'ep_analyzer_language', [ $this, 'force_analyzer_language' ], 20, 2 );
 		add_filter( 'ep_post_fuzziness_arg', [ $this, 'filter_fuzziness' ] );
@@ -67,11 +67,10 @@ class Analyzer {
 	}
 
 	/**
-	 * Force Elasticsearch analyzer language to French while the addon is enabled.
+	 * Force the ElasticPress stopwords list to French while the addon is enabled.
 	 *
-	 * ElasticPress expects different formats per context (stopwords list vs snowball
-	 * stemmer vs analyzer language key). Returning a bare "french" for every context
-	 * would break ep_stop stopwords.
+	 * Only the filter_ep_stop context is overridden: our custom analyzers replace
+	 * ewp_snowball, so other ep_analyzer_language contexts are left unchanged.
 	 *
 	 * @param  string $lang    Language resolved by ElasticPress (or earlier filters).
 	 * @param  string $context Where the filter runs (e.g. filter_ep_stop).
@@ -86,11 +85,7 @@ class Analyzer {
 			return '_french_';
 		}
 
-		if ( 'filter_ewp_snowball' === $context ) {
-			return 'French';
-		}
-
-		return 'french';
+		return $lang;
 	}
 
 	/**
@@ -100,9 +95,10 @@ class Analyzer {
 	 * A full reindex (wp elasticpress index --setup) is required.
 	 *
 	 * @param  array<string, mixed> $mapping Native ElasticPress mapping.
+	 * @param  string               $index   Index name being mapped.
 	 * @return array<string, mixed>
 	 */
-	public function filter_mapping( array $mapping ): array {
+	public function filter_mapping( array $mapping, string $index = '' ): array {
 		$settings = Settings::get();
 
 		if ( empty( $settings['enabled'] ) ) {
@@ -118,7 +114,8 @@ class Analyzer {
 			$settings
 		);
 
-		$dual = Settings::is_dual_analyzers_enabled( $settings );
+		$dual          = Settings::is_dual_analyzers_enabled( $settings );
+		$dual_on_posts = $dual && $this->is_post_index( $index );
 
 		foreach ( [ 'default', 'default_search' ] as $analyzer_key ) {
 			if ( ! isset( $mapping['settings']['analysis']['analyzer'][ $analyzer_key ] ) ) {
@@ -128,11 +125,11 @@ class Analyzer {
 			$mapping['settings']['analysis']['analyzer'][ $analyzer_key ] = $this->build_analyzer(
 				$mapping['settings']['analysis']['analyzer'][ $analyzer_key ],
 				$settings,
-				$dual ? 'light' : 'full'
+				$dual_on_posts ? 'light' : 'full'
 			);
 		}
 
-		if ( $dual ) {
+		if ( $dual_on_posts ) {
 			$mapping = $this->register_heavy_analyzer( $mapping, $settings );
 		}
 
@@ -150,7 +147,8 @@ class Analyzer {
 	 * Add .stemmed multi-fields on post text properties when dual mode is on.
 	 *
 	 * Runs on ep_post_mapping (before put_mapping) so we merge with features such as
-	 * DidYouMean (.shingle) without overwriting their fields.
+	 * DidYouMean (.shingle) without overwriting their fields. Analyzer registration
+	 * is owned exclusively by filter_mapping (ep_config_mapping).
 	 *
 	 * @param  array<string, mixed> $mapping Post mapping.
 	 * @return array<string, mixed>
@@ -161,16 +159,6 @@ class Analyzer {
 		if ( ! Settings::is_dual_analyzers_enabled( $settings ) ) {
 			return $mapping;
 		}
-
-		// Ensure filters/analyzers exist even if ep_post_mapping runs before ep_config_mapping.
-		if ( ! isset( $mapping['settings']['analysis'] ) ) {
-			$mapping['settings']['analysis'] = [];
-		}
-		$mapping['settings']['analysis']['filter'] = $this->build_filters(
-			$mapping['settings']['analysis']['filter'] ?? [],
-			$settings
-		);
-		$mapping = $this->register_heavy_analyzer( $mapping, $settings );
 
 		$properties = $mapping['mappings']['properties'] ?? null;
 		if ( ! is_array( $properties ) ) {
@@ -227,7 +215,7 @@ class Analyzer {
 	 * @param  array<string, mixed> $settings Plugin settings.
 	 * @return array<string, mixed>
 	 */
-	private function build_filters( array $filters, array $settings ): array {
+	public function build_filters( array $filters, array $settings ): array {
 		if ( ! empty( $settings['elision'] ) ) {
 			$filters['epfr_elision'] = [
 				'type'          => 'elision',
@@ -243,7 +231,7 @@ class Analyzer {
 			];
 		}
 
-		$extra_stopwords = Settings::get_extra_stopwords_array();
+		$extra_stopwords = Settings::get_extra_stopwords_array( $settings );
 		if ( ! empty( $extra_stopwords ) ) {
 			$filters['epfr_extra_stop'] = [
 				'type'        => 'stop',
@@ -253,7 +241,7 @@ class Analyzer {
 		}
 
 		// Never register keyword_marker without keywords (common ES configuration pitfall).
-		$stem_exclusion = Settings::get_stem_exclusion_array();
+		$stem_exclusion = Settings::get_stem_exclusion_array( $settings );
 		if ( ! empty( $stem_exclusion ) && 'none' !== $settings['stemmer'] ) {
 			$filters['epfr_keywords'] = [
 				'type'     => 'keyword_marker',
@@ -268,16 +256,19 @@ class Analyzer {
 	 * Rebuild the filter chain for a given analyzer.
 	 *
 	 * Modes:
-	 * - full: elision -> lowercase -> asciifolding -> stop -> extras -> synonyms -> keywords -> stemmer
+	 * - full: elision -> lowercase -> stop -> extras -> asciifolding -> EP filters -> keywords -> stemmer
 	 * - light: same without keywords/stemmer (precision / dual main fields)
+	 *
+	 * Asciifolding is placed after stop so accented French stopwords (_french_) still match.
+	 * ElasticPress's ep_asciifolding (preserve_original) is removed when we insert ours.
 	 *
 	 * @param  array<string, mixed> $analyzer Analyzer definition.
 	 * @param  array<string, mixed> $settings Plugin settings.
 	 * @param  string               $mode     'full' or 'light'.
 	 * @return array<string, mixed>
 	 */
-	private function build_analyzer( array $analyzer, array $settings, string $mode = 'full' ): array {
-		$chain = $analyzer['filter'] ?? [];
+	public function build_analyzer( array $analyzer, array $settings, string $mode = 'full' ): array {
+		$chain          = is_array( $analyzer['filter'] ?? null ) ? $analyzer['filter'] : [];
 		$apply_stemming = ( 'full' === $mode && 'none' !== $settings['stemmer'] );
 
 		// Always remove existing stemmers and our keyword marker first.
@@ -302,34 +293,47 @@ class Analyzer {
 			$chain[] = 'lowercase';
 		}
 
-		// Remove all accent-folding filters when the option is disabled, including ElasticPress'
-		// preserve_original variant.
+		// Always strip folding filters first; re-insert asciifolding after stop when enabled.
 		$chain = array_values(
 			array_filter(
 				$chain,
-				static function ( $filter_name ) use ( $settings ): bool {
-					if ( empty( $settings['asciifolding'] ) && in_array( $filter_name, [ 'asciifolding', 'ep_asciifolding' ], true ) ) {
-						return false;
-					}
-					return true;
+				static function ( $filter_name ): bool {
+					return ! in_array( $filter_name, [ 'asciifolding', 'ep_asciifolding' ], true );
 				}
 			)
 		);
 
-		// Insert asciifolding right after lowercase.
-		if ( ! empty( $settings['asciifolding'] ) && ! in_array( 'asciifolding', $chain, true ) ) {
-			$position = array_search( 'lowercase', $chain, true );
-			array_splice( $chain, (int) $position + 1, 0, 'asciifolding' );
+		// Extra stopwords immediately after ep_stop (before asciifolding), so accented forms still match.
+		$extra_stopwords = Settings::get_extra_stopwords_array( $settings );
+		if ( ! empty( $extra_stopwords ) && ! in_array( 'epfr_extra_stop', $chain, true ) ) {
+			$stop_pos = array_search( 'ep_stop', $chain, true );
+			if ( false === $stop_pos ) {
+				$chain[] = 'epfr_extra_stop';
+			} else {
+				array_splice( $chain, $stop_pos + 1, 0, 'epfr_extra_stop' );
+			}
 		}
 
-		// Extra stopwords after existing stopwords (ep_stop).
-		if ( ! empty( Settings::get_extra_stopwords_array() ) && ! in_array( 'epfr_extra_stop', $chain, true ) ) {
-			$chain[] = 'epfr_extra_stop';
+		// Asciifolding after stop (+ extras), before remaining EP filters and stemming.
+		if ( ! empty( $settings['asciifolding'] ) ) {
+			$insert_after = array_search( 'epfr_extra_stop', $chain, true );
+			if ( false === $insert_after ) {
+				$insert_after = array_search( 'ep_stop', $chain, true );
+			}
+			if ( false === $insert_after ) {
+				$insert_after = array_search( 'lowercase', $chain, true );
+			}
+			if ( false === $insert_after ) {
+				$chain[] = 'asciifolding';
+			} else {
+				array_splice( $chain, $insert_after + 1, 0, 'asciifolding' );
+			}
 		}
 
 		if ( $apply_stemming ) {
 			// keyword_marker must sit immediately before the stemmer (official french order).
-			if ( ! empty( Settings::get_stem_exclusion_array() ) && ! in_array( 'epfr_keywords', $chain, true ) ) {
+			$stem_exclusion = Settings::get_stem_exclusion_array( $settings );
+			if ( ! empty( $stem_exclusion ) && ! in_array( 'epfr_keywords', $chain, true ) ) {
 				$chain[] = 'epfr_keywords';
 			}
 			$chain[] = 'epfr_stemmer';
@@ -338,6 +342,25 @@ class Analyzer {
 		$analyzer['filter'] = array_values( array_unique( $chain ) );
 
 		return $analyzer;
+	}
+
+	/**
+	 * Whether the given Elasticsearch index name belongs to the posts indexable.
+	 *
+	 * @param  string $index Index name from ep_config_mapping.
+	 * @return bool
+	 */
+	private function is_post_index( string $index ): bool {
+		if ( '' === $index || ! class_exists( '\ElasticPress\Indexables' ) ) {
+			return false;
+		}
+
+		$post = \ElasticPress\Indexables::factory()->get( 'post' );
+		if ( ! $post || ! method_exists( $post, 'get_index_name' ) ) {
+			return false;
+		}
+
+		return $index === $post->get_index_name();
 	}
 
 	/**
@@ -429,6 +452,16 @@ class Analyzer {
 			}
 		}
 
+		/**
+		 * Relative boost applied to .stemmed multi-fields versus their parent field boost.
+		 *
+		 * @param float $factor Default 0.5.
+		 */
+		$boost_factor = (float) apply_filters( 'epfr_stemmed_boost_factor', self::STEMMED_BOOST_FACTOR );
+		if ( $boost_factor < 0 ) {
+			$boost_factor = 0.0;
+		}
+
 		$extra = [];
 		foreach ( $fields as $field ) {
 			if ( ! is_string( $field ) ) {
@@ -446,7 +479,7 @@ class Analyzer {
 				continue;
 			}
 
-			$stemmed_boost = $boost * self::STEMMED_BOOST_FACTOR;
+			$stemmed_boost = $boost * $boost_factor;
 			$extra[]       = $stemmed_name . '^' . $this->format_boost( $stemmed_boost );
 			$existing[ $stemmed_name ] = true;
 		}

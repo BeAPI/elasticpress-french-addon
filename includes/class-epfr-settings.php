@@ -175,20 +175,22 @@ class Settings {
 	/**
 	 * Turn the extra stopwords list (comma-separated text) into an ES array.
 	 *
+	 * @param  array<string, mixed>|null $settings Optional settings snapshot (avoids get_option()).
 	 * @return string[]
 	 */
-	public static function get_extra_stopwords_array(): array {
-		$settings = self::get();
+	public static function get_extra_stopwords_array( ?array $settings = null ): array {
+		$settings = $settings ?? self::get();
 		return self::csv_to_array( (string) ( $settings['extra_stopwords'] ?? '' ) );
 	}
 
 	/**
 	 * Turn the stem exclusion list (comma-separated text) into an ES array.
 	 *
+	 * @param  array<string, mixed>|null $settings Optional settings snapshot (avoids get_option()).
 	 * @return string[]
 	 */
-	public static function get_stem_exclusion_array(): array {
-		$settings = self::get();
+	public static function get_stem_exclusion_array( ?array $settings = null ): array {
+		$settings = $settings ?? self::get();
 		return self::csv_to_array( (string) ( $settings['stem_exclusion'] ?? '' ) );
 	}
 

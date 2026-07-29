@@ -3,8 +3,8 @@
  * Plugin Name:       ElasticPress French Addon
  * Plugin URI:        https://github.com/beapi/elasticpress-french-addon
  * Description:       Fixes and optimizes the ElasticPress analyzer for French: asciifolding, elision, configurable stemmer, extra stopwords, fuzziness. Notably fixes the classic bug where accent-free searches return unrelated results.
- * Version:            1.0.0
- * Requires at least: 6.2
+ * Version:            1.0.1
+ * Requires at least: 6.5
  * Requires PHP:       8.0
  * Author:             Be API
  * Author URI:         https://beapi.fr
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'EPFR_VERSION', '1.0.0' );
+define( 'EPFR_VERSION', '1.0.1' );
 define( 'EPFR_PLUGIN_FILE', __FILE__ );
 define( 'EPFR_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'EPFR_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

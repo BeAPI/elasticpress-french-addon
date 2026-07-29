@@ -1,10 +1,10 @@
 === ElasticPress French Addon ===
 Contributors: beapi
 Tags: elasticpress, elasticsearch, search, french, i18n
-Requires at least: 6.2
-Tested up to: 6.6
+Requires at least: 6.5
+Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Requires Plugins: elasticpress
@@ -13,11 +13,11 @@ Corrige et optimise l'analyzer ElasticPress pour le contenu en langue française
 
 == Description ==
 
-Le mapping par défaut d'ElasticPress n'est pas adapté au français : pas d'asciifolding
-opérationnel sur les champs de recherche full-text, stemmer Snowball souvent trop agressif,
-absence de gestion de l'élision. Résultat typique : une recherche sans accent ("haiti")
-remonte des résultats sans rapport ("haine", "haute", "fait"), alors que la même recherche
-avec accent ("haïti") fonctionne correctement.
+Depuis ElasticPress 4 (mappings 5-2+), `ep_asciifolding` est déjà présent sur les
+analyzers full-text `default` / `default_search`, mais placé *après* le stemmer
+Snowball. Le stemming travaille donc sur des formes accentuées, et le Snowball
+français agressif produit des collisions (haine / haute / fait vs haïti). S'y
+ajoutent l'absence d'élision française et un stemmer non configurable.
 
 Ce plugin s'active comme un addon à ElasticPress et corrige ces points via les filtres
 natifs `ep_config_mapping` / `ep_post_mapping`, sans jamais toucher au coeur d'ElasticPress
@@ -25,18 +25,20 @@ ni aux filtres déjà définis par d'autres plugins (synonymes, shingle, etc.).
 
 Il s'inspire de la documentation officielle des language analyzers Elasticsearch et de
 l'article JoliCode sur un bon analyzer français : base `french` (élision, stop,
-light_french), plus asciifolding, exclusions de stemming, et mode dual light/heavy optionnel.
+light_french), plus asciifolding *après* les stopwords et *avant* le stemming,
+exclusions de stemming, et mode dual light/heavy optionnel (index posts uniquement).
 
 **Ce que fait le plugin :**
 
-* Ajoute un filtre `asciifolding` réellement actif sur les analyzers `default` et
-  `default_search` (le normalizer `keyword` livré par défaut avec ElasticPress ne
-  s'applique jamais à la recherche full-text, c'est un piège classique).
+* Remplace `ep_asciifolding` (après Snowball) par un `asciifolding` placé après les
+  stopwords et avant le stemming, pour que accents et racinisation travaillent
+  correctement ensemble.
 * Ajoute la gestion de l'élision française (l'article, d'un, qu'il...).
 * Permet de choisir le niveau de racinisation (aucun, minimal, léger, complet) au lieu
   du Snowball français imposé par défaut, souvent responsable de collisions non pertinentes.
 * Permet d'exclure des mots du stemming (`stem_exclusion`, ex. "croix" vs "croissant").
-* Mode dual optionnel : analyzer light (pertinence) + multi-fields `.stemmed` heavy (rappel).
+* Mode dual optionnel (index posts) : analyzer light (pertinence) + multi-fields
+  `.stemmed` heavy (rappel).
 * Permet d'ajuster la fuzziness des requêtes (auto / stricte / 1 faute / 2 fautes).
 * Permet d'ajouter des stopwords additionnels sans toucher à la liste standard.
 
@@ -74,9 +76,11 @@ Les trois formes doivent produire le même token après réindexation.
 
 = Pourquoi mes recherches accentuées fonctionnent mais pas les non-accentuées (ou l'inverse) ? =
 
-C'est exactement le symptôme que corrige ce plugin. Sans asciifolding actif sur la chaîne
-de recherche, "haiti" et "haïti" produisent deux tokens différents à l'indexation, donc
-seule la forme correspondant au contenu réel matche en clause exacte.
+Souvent un symptôme de stemming agressif sur des formes encore accentuées (Snowball
+avant folding dans le mapping EP par défaut), pas d'une absence totale d'asciifolding.
+Ce plugin replace le folding avant le stemmer (et après les stopwords) et propose un
+stemmer `light_french` configurable, pour que "haiti" / "haïti" convergent sans
+entraîner les collisions haine / haute.
 
 = Le plugin modifie-t-il mes données existantes ? =
 
@@ -95,6 +99,10 @@ ElasticPress de l'administration réseau.
 == Changelog ==
 
 Historique détaillé (GitHub) : https://github.com/beapi/elasticpress-french-addon/blob/main/CHANGELOG.md
+
+= 1.0.1 =
+* Correctif stopwords accentués : asciifolding après ep_stop, retrait de ep_asciifolding.
+* Mode dual limité à l'index posts ; notices stopwords _french_ ; tests unitaires PHPUnit.
 
 = 1.0.0 =
 * Version initiale : asciifolding, élision, stemmer configurable, fuzziness, stopwords additionnels.

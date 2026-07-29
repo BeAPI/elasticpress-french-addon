@@ -2,7 +2,7 @@
 # This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: ElasticPress French Addon 1.0.0\n"
+"Project-Id-Version: ElasticPress French Addon 1.0.1\n"
 "Report-Msgid-Bugs-To: https://github.com/beapi/elasticpress-french-addon/issues\n"
 "POT-Creation-Date: 2026-07-28 14:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
@@ -39,11 +39,11 @@ msgid "Any change below only applies to new indexes. A full reindex is required 
 msgstr ""
 
 #: includes/class-epfr-admin.php
-msgid "While the addon is enabled, the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the ElasticPress Language setting."
+msgid "While the addon is enabled, the stopwords list is forced to _french_, regardless of the ElasticPress Language setting."
 msgstr ""
 
 #: includes/class-epfr-admin.php
-msgid "ElasticPress French Addon is active: the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the Language setting below. <a href=\"%s\">Manage French Addon settings</a>."
+msgid "ElasticPress French Addon is active: the stopwords list is forced to <code>_french_</code>, regardless of the Language setting below. <a href=\"%s\">Manage French Addon settings</a>."
 msgstr ""
 
 #: includes/class-epfr-admin.php
@@ -143,7 +143,7 @@ msgid "Use a light analyzer on main text fields (precision) and a heavy stemmed 
 msgstr ""
 
 #: includes/class-epfr-admin.php
-msgid "Inspired by the dual french_light / french_heavy approach. Applies to post_title, post_content, and post_excerpt. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
+msgid "Inspired by the dual french_light / french_heavy approach. Applies to the posts index only (post_title, post_content, post_excerpt). Other indexables (terms, comments, users) keep a full stemmed chain. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
 msgstr ""
 
 #: includes/class-epfr-admin.php
