@@ -226,8 +226,9 @@ Sur un site WordPress en `fr_FR`, l’interface d’administration s’affiche a
 
 ## Réglages disponibles
 
-Réglable dans **ElasticPress > French Addon**, ou directement en base via l'option
-`epfr_settings` :
+Réglable dans **ElasticPress > French Addon** (menu site, ou **Network Admin** lorsque
+ElasticPress est en mode `EP_IS_NETWORK`), ou directement en base via `epfr_settings`
+(option de blog, ou `site_option` en mode réseau) :
 
 - `asciifolding` (bool) : ignore les accents à l'indexation et à la recherche.
 - `elision` (bool) : gère l'élision française (l', d', qu'...).

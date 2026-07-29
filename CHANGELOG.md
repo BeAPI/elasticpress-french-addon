@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- Align network-mode settings with ElasticPress: store `epfr_settings` as a `site_option`, gate the admin UI with `manage_network_elasticpress` (via `Utils\get_network_capability()`), and register the menu under Network Admin when `EP_IS_NETWORK` is active.
+- Align site-mode capability with ElasticPress `Utils\get_capability()` instead of hard-coded `manage_options`.
+- Harden `Settings::sanitize()` against a missing POST field (`mixed` input) to avoid a PHP 8 TypeError on forged admin saves.
+
 ## [1.0.0] — 2026-07-29
 
 Initial public release.

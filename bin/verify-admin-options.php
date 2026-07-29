@@ -258,7 +258,8 @@ PHP;
 
 function epfrOptionsApplySettings( array $settings ): void {
 	$code = sprintf(
-		"update_option('epfr_settings', %s); echo 'ok';",
+		"if ( defined( 'EP_IS_NETWORK' ) && EP_IS_NETWORK ) { update_site_option( 'epfr_settings', %s ); } else { update_option( 'epfr_settings', %s ); } echo 'ok';",
+		var_export( $settings, true ),
 		var_export( $settings, true )
 	);
 	epfrOptionsWpEval( $code );

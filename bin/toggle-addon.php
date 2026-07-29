@@ -50,26 +50,49 @@ if (class_exists('\\ElasticPress_French_Addon\\Settings')) {
     $defaults = \ElasticPress_French_Addon\Settings::get_defaults();
 }
 
-$current = get_option(EPFR_OPTION_KEY, []);
-if (! is_array($current)) {
-    $current = [];
+$is_network = defined('EP_IS_NETWORK') && EP_IS_NETWORK;
+
+if (class_exists('\\ElasticPress_French_Addon\\Settings')) {
+    $settings            = \ElasticPress_French_Addon\Settings::get();
+    $settings['enabled'] = ('1' === $enabled);
+
+    if ('1' === $enabled) {
+        // Restore recommended defaults when re-enabling for compare runs.
+        $settings['asciifolding']    = true;
+        $settings['elision']         = true;
+        $settings['stemmer']         = 'light_french';
+        $settings['fuzziness']       = 'auto';
+        $settings['extra_stopwords'] = '';
+        $settings['stem_exclusion']  = '';
+        $settings['dual_analyzers']  = false;
+    }
+
+    \ElasticPress_French_Addon\Settings::update($settings);
+} else {
+    $current = $is_network ? get_site_option(EPFR_OPTION_KEY, []) : get_option(EPFR_OPTION_KEY, []);
+    if (! is_array($current)) {
+        $current = [];
+    }
+
+    $settings            = wp_parse_args($current, $defaults);
+    $settings['enabled'] = ('1' === $enabled);
+
+    if ('1' === $enabled) {
+        $settings['asciifolding']    = true;
+        $settings['elision']         = true;
+        $settings['stemmer']         = 'light_french';
+        $settings['fuzziness']       = 'auto';
+        $settings['extra_stopwords'] = '';
+        $settings['stem_exclusion']  = '';
+        $settings['dual_analyzers']  = false;
+    }
+
+    if ($is_network) {
+        update_site_option(EPFR_OPTION_KEY, $settings);
+    } else {
+        update_option(EPFR_OPTION_KEY, $settings);
+    }
 }
-
-$settings            = wp_parse_args($current, $defaults);
-$settings['enabled'] = ('1' === $enabled);
-
-if ('1' === $enabled) {
-    // Restore recommended defaults when re-enabling for compare runs.
-    $settings['asciifolding']    = true;
-    $settings['elision']         = true;
-    $settings['stemmer']         = 'light_french';
-    $settings['fuzziness']       = 'auto';
-    $settings['extra_stopwords'] = '';
-    $settings['stem_exclusion']  = '';
-    $settings['dual_analyzers']  = false;
-}
-
-update_option(EPFR_OPTION_KEY, $settings);
 
 WP_CLI::success(
     sprintf(

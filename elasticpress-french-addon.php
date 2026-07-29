@@ -83,9 +83,9 @@ add_action( 'plugins_loaded', 'epfr_init', 20 ); // Priority 20: after ElasticPr
  * On activation: store default settings and show a reindex reminder.
  */
 function epfr_activate(): void {
-	if ( false === get_option( EPFR_OPTION_KEY, false ) ) {
-		include_once EPFR_PLUGIN_DIR . 'includes/class-epfr-settings.php';
-		update_option( EPFR_OPTION_KEY, \ElasticPress_French_Addon\Settings::get_defaults() );
+	include_once EPFR_PLUGIN_DIR . 'includes/class-epfr-settings.php';
+	if ( ! \ElasticPress_French_Addon\Settings::exists() ) {
+		\ElasticPress_French_Addon\Settings::update( \ElasticPress_French_Addon\Settings::get_defaults() );
 	}
 	set_transient( 'epfr_activation_notice', true, MINUTE_IN_SECONDS * 5 );
 }
@@ -100,15 +100,11 @@ function epfr_activation_notice(): void {
 		return;
 	}
 
-	if ( function_exists( '\ElasticPress\Utils\get_capability' ) ) {
-		$capability = ( defined( 'EP_IS_NETWORK' ) && EP_IS_NETWORK )
-			? \ElasticPress\Utils\get_network_capability()
-			: \ElasticPress\Utils\get_capability();
-	} else {
-		$capability = 'manage_options';
+	if ( ! class_exists( '\ElasticPress_French_Addon\Settings' ) ) {
+		return;
 	}
 
-	if ( ! current_user_can( $capability ) ) {
+	if ( ! current_user_can( \ElasticPress_French_Addon\Settings::get_capability() ) ) {
 		return;
 	}
 
@@ -120,3 +116,4 @@ function epfr_activation_notice(): void {
 	);
 }
 add_action( 'admin_notices', 'epfr_activation_notice' );
+add_action( 'network_admin_notices', 'epfr_activation_notice' );

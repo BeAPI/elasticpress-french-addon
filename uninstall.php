@@ -1,7 +1,7 @@
 <?php
 /**
- * Désinstallation du plugin : supprime les options créées.
- * N'affecte jamais le cluster Elasticsearch ni les index existants.
+ * Uninstall the plugin: remove options created by the addon.
+ * Never touches the Elasticsearch cluster or existing indexes.
  *
  * @package ElasticPress_French_Addon
  */
@@ -11,7 +11,17 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 }
 
 delete_option( 'epfr_settings' );
+delete_site_option( 'epfr_settings' );
 
 if ( is_multisite() ) {
-	delete_site_option( 'epfr_settings' );
+	$site_ids = get_sites(
+		[
+			'fields' => 'ids',
+			'number' => 0,
+		]
+	);
+
+	foreach ( $site_ids as $site_id ) {
+		delete_blog_option( (int) $site_id, 'epfr_settings' );
+	}
 }

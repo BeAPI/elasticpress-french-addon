@@ -85,8 +85,12 @@ Une réindexation complète est nécessaire pour que le contenu existant soit re
 
 = Compatible multisite ? =
 
-Oui, le filtre s'applique à `ep_config_mapping` qui est appelé par index, donc pour
-chaque site du réseau.
+Oui. Hors mode réseau ElasticPress, le filtre s'applique à `ep_config_mapping` par
+index, donc pour chaque site. Lorsque ElasticPress est activé au niveau du réseau
+(`EP_IS_NETWORK`), les réglages de cet addon sont stockés en `site_option` et
+réservés à la capability réseau d'ElasticPress (`manage_network_elasticpress`,
+filtrable via `ep_network_capability`) ; l'écran se trouve alors dans le menu
+ElasticPress de l'administration réseau.
 
 == Changelog ==
 

@@ -38,26 +38,100 @@ class Settings {
 	}
 
 	/**
+	 * Whether ElasticPress is running in network-wide mode.
+	 *
+	 * Falls back to checking whether ElasticPress is network-activated when the
+	 * EP_IS_NETWORK constant is not yet defined (e.g. during plugin activation).
+	 */
+	public static function is_network_mode(): bool {
+		if ( defined( 'EP_IS_NETWORK' ) && EP_IS_NETWORK ) {
+			return true;
+		}
+
+		if ( ! is_multisite() ) {
+			return false;
+		}
+
+		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		return is_plugin_active_for_network( 'elasticpress/elasticpress.php' );
+	}
+
+	/**
+	 * Capability required to manage addon settings (aligned with ElasticPress).
+	 */
+	public static function get_capability(): string {
+		if ( self::is_network_mode() ) {
+			if ( function_exists( '\ElasticPress\Utils\get_network_capability' ) ) {
+				return \ElasticPress\Utils\get_network_capability();
+			}
+			return 'manage_network_options';
+		}
+
+		if ( function_exists( '\ElasticPress\Utils\get_capability' ) ) {
+			return \ElasticPress\Utils\get_capability();
+		}
+
+		return 'manage_options';
+	}
+
+	/**
 	 * Get current settings merged with defaults
 	 * (protects against a partial option after a future plugin update).
 	 *
 	 * @return array<string, mixed>
 	 */
 	public static function get(): array {
-		$stored = get_option( EPFR_OPTION_KEY, [] );
+		$stored = self::read_raw();
 		if ( ! is_array( $stored ) ) {
 			$stored = [];
 		}
+
+		if ( self::is_network_mode() && [] === $stored ) {
+			$stored = self::migrate_blog_option_to_site_option();
+		}
+
 		return wp_parse_args( $stored, self::get_defaults() );
+	}
+
+	/**
+	 * Persist settings using the storage matching the ElasticPress mode.
+	 *
+	 * @param  array<string, mixed> $settings Sanitized settings.
+	 * @return bool
+	 */
+	public static function update( array $settings ): bool {
+		if ( self::is_network_mode() ) {
+			return (bool) update_site_option( EPFR_OPTION_KEY, $settings );
+		}
+		return (bool) update_option( EPFR_OPTION_KEY, $settings );
+	}
+
+	/**
+	 * Whether a stored option already exists (without merging defaults).
+	 */
+	public static function exists(): bool {
+		if ( self::is_network_mode() ) {
+			return false !== get_site_option( EPFR_OPTION_KEY, false );
+		}
+		return false !== get_option( EPFR_OPTION_KEY, false );
 	}
 
 	/**
 	 * Sanitize a settings array submitted from the admin form.
 	 *
-	 * @param  array<string, mixed> $input Raw form data.
+	 * Accepts mixed because options.php may pass null when the field is absent from POST.
+	 *
+	 * @param  mixed $input Raw form data.
 	 * @return array<string, mixed>
 	 */
-	public static function sanitize( array $input ): array {
+	public static function sanitize( mixed $input ): array {
+		if ( ! is_array( $input ) ) {
+			$input = [];
+		}
+
 		$defaults = self::get_defaults();
 
 		$allowed_stemmers  = [ 'none', 'minimal_french', 'light_french', 'french' ];
@@ -130,5 +204,48 @@ class Settings {
 			return false;
 		}
 		return 'none' !== ( $settings['stemmer'] ?? 'none' );
+	}
+
+	/**
+	 * Read the raw stored option for the current ElasticPress mode.
+	 *
+	 * @return mixed
+	 */
+	private static function read_raw(): mixed {
+		if ( self::is_network_mode() ) {
+			return get_site_option( EPFR_OPTION_KEY, [] );
+		}
+		return get_option( EPFR_OPTION_KEY, [] );
+	}
+
+	/**
+	 * One-shot migration: copy a blog option into the network site option.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function migrate_blog_option_to_site_option(): array {
+		$blog_option = get_option( EPFR_OPTION_KEY, false );
+		if ( ! is_array( $blog_option ) || [] === $blog_option ) {
+			$main_site_id = function_exists( 'get_main_site_id' ) ? (int) get_main_site_id() : 0;
+			if ( $main_site_id > 0 && get_current_blog_id() !== $main_site_id ) {
+				$blog_option = get_blog_option( $main_site_id, EPFR_OPTION_KEY, false );
+			}
+		}
+
+		if ( ! is_array( $blog_option ) || [] === $blog_option ) {
+			return [];
+		}
+
+		update_site_option( EPFR_OPTION_KEY, $blog_option );
+		delete_option( EPFR_OPTION_KEY );
+
+		if ( function_exists( 'get_main_site_id' ) ) {
+			$main_site_id = (int) get_main_site_id();
+			if ( $main_site_id > 0 && get_current_blog_id() !== $main_site_id ) {
+				delete_blog_option( $main_site_id, EPFR_OPTION_KEY );
+			}
+		}
+
+		return $blog_option;
 	}
 }

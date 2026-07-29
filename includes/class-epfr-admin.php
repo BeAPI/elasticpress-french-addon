@@ -32,9 +32,22 @@ class Admin {
 	}
 
 	public function init(): void {
-		add_action( 'admin_menu', [ $this, 'register_menu' ] );
+		$menu_hook = Settings::is_network_mode() ? 'network_admin_menu' : 'admin_menu';
+		add_action( $menu_hook, [ $this, 'register_menu' ] );
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
+		add_filter( 'option_page_capability_epfr_settings_group', [ $this, 'filter_settings_capability' ] );
 		add_filter( 'ep_admin_notices', [ $this, 'settings_language_notice' ] );
+
+		if ( Settings::is_network_mode() ) {
+			add_action( 'network_admin_edit_epfr_save_settings', [ $this, 'save_network_settings' ] );
+		}
+	}
+
+	/**
+	 * Align the Settings API capability with ElasticPress.
+	 */
+	public function filter_settings_capability(): string {
+		return Settings::get_capability();
 	}
 
 	/**
@@ -56,7 +69,9 @@ class Admin {
 			return $notices;
 		}
 
-		$addon_url = admin_url( 'admin.php?page=elasticpress-french-addon' );
+		$addon_url = Settings::is_network_mode()
+			? network_admin_url( 'admin.php?page=elasticpress-french-addon' )
+			: admin_url( 'admin.php?page=elasticpress-french-addon' );
 
 		$notices['epfr_language_forced'] = [
 			'html'    => sprintf(
@@ -66,7 +81,7 @@ class Admin {
 			),
 			'type'    => 'warning',
 			'dismiss' => false,
-			'scope'   => 'site',
+			'scope'   => Settings::is_network_mode() ? 'network' : 'site',
 		];
 
 		return $notices;
@@ -81,13 +96,17 @@ class Admin {
 			'elasticpress',
 			__( 'French Addon', 'elasticpress-french-addon' ),
 			__( 'French Addon', 'elasticpress-french-addon' ),
-			'manage_options',
+			Settings::get_capability(),
 			'elasticpress-french-addon',
 			[ $this, 'render_page' ]
 		);
 	}
 
 	public function register_settings(): void {
+		if ( Settings::is_network_mode() ) {
+			return;
+		}
+
 		register_setting(
 			'epfr_settings_group',
 			EPFR_OPTION_KEY,
@@ -100,17 +119,51 @@ class Admin {
 	}
 
 	/**
+	 * Persist settings from the network admin form.
+	 */
+	public function save_network_settings(): void {
+		if ( ! current_user_can( Settings::get_capability() ) ) {
+			wp_die( esc_html__( 'Sorry, you are not allowed to manage these settings.', 'elasticpress-french-addon' ) );
+		}
+
+		check_admin_referer( 'epfr_settings_group-options' );
+
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- sanitized via Settings::sanitize().
+		$raw = isset( $_POST[ EPFR_OPTION_KEY ] ) ? wp_unslash( $_POST[ EPFR_OPTION_KEY ] ) : [];
+		Settings::update( Settings::sanitize( $raw ) );
+
+		wp_safe_redirect(
+			add_query_arg(
+				[
+					'page'             => 'elasticpress-french-addon',
+					'settings-updated' => 'true',
+				],
+				network_admin_url( 'admin.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
 	 * Render the settings page.
 	 */
 	public function render_page(): void {
-		if ( ! current_user_can( 'manage_options' ) ) {
+		if ( ! current_user_can( Settings::get_capability() ) ) {
 			return;
 		}
 
-		$settings = Settings::get();
+		$settings    = Settings::get();
+		$is_network  = Settings::is_network_mode();
+		$form_action = $is_network
+			? network_admin_url( 'edit.php?action=epfr_save_settings' )
+			: admin_url( 'options.php' );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'ElasticPress French Addon', 'elasticpress-french-addon' ); ?></h1>
+
+			<?php if ( $is_network && isset( $_GET['settings-updated'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification.Recommended ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Settings saved.', 'elasticpress-french-addon' ); ?></p></div>
+			<?php endif; ?>
 
 			<div class="notice notice-info">
 				<p>
@@ -122,8 +175,14 @@ class Admin {
 				</p>
 			</div>
 
-			<form method="post" action="options.php">
-		<?php settings_fields( 'epfr_settings_group' ); ?>
+			<form method="post" action="<?php echo esc_url( $form_action ); ?>">
+		<?php
+		if ( $is_network ) {
+			wp_nonce_field( 'epfr_settings_group-options' );
+		} else {
+			settings_fields( 'epfr_settings_group' );
+		}
+		?>
 
 				<table class="form-table" role="presentation">
 
