@@ -49,7 +49,13 @@ light_french), plus asciifolding, exclusions de stemming, et mode dual light/hea
 == Installation ==
 
 1. Installez et activez ElasticPress au préalable.
-2. Installez ce plugin (dossier `elasticpress-french-addon` dans `wp-content/plugins`).
+2. Installez ce plugin, soit :
+   * via Composer (`composer require beapi/elasticpress-french-addon`, dépôt VCS
+     GitHub si besoin — voir le README GitHub) ;
+   * via le ZIP joint aux releases GitHub (`elasticpress-french-addon.zip`) :
+     Extensions > Ajouter > Téléverser, ou décompresser dans `wp-content/plugins` ;
+   * soit en plaçant le dossier `elasticpress-french-addon` dans `wp-content/plugins`.
+
 3. Activez le plugin.
 4. Ajustez les réglages dans ElasticPress > French Addon si besoin (les valeurs par
    défaut conviennent à la majorité des sites français).

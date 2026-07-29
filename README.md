@@ -31,9 +31,70 @@ d'Elasticsearch.
 
 ## Installation
 
+Prérequis : ElasticPress installé et actif. Après activation de cet addon, une
+réindexation complète est **obligatoire**.
+
+### Via Composer
+
+Le package `beapi/elasticpress-french-addon` est de type `wordpress-plugin`. Avec
+[`composer/installers`](https://github.com/composer/installers) dans votre projet,
+il est installé sous `wp-content/plugins/`.
+
+Ajoutez le dépôt GitHub dans le `composer.json` de votre projet (tant que le
+package n’est pas publié sur Packagist) :
+
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/BeAPI/elasticpress-french-addon.git"
+    }
+  ]
+}
+```
+
+Puis :
+
+```bash
+composer require beapi/elasticpress-french-addon
+wp plugin activate elasticpress-french-addon
+wp elasticpress index --setup --network-wide
+```
+
+Exemple d’`installer-paths` côté projet (à adapter à votre arborescence) :
+
+```json
+{
+  "extra": {
+    "installer-paths": {
+      "wp-content/plugins/{$name}/": ["type:wordpress-plugin"]
+    }
+  }
+}
+```
+
+### Via ZIP (GitHub Releases)
+
+À chaque tag Git, le workflow de release produit un ZIP propre
+(`elasticpress-french-addon.zip`, hors artefacts de développement via `.distignore`)
+et le joint à la [release GitHub](https://github.com/BeAPI/elasticpress-french-addon/releases).
+
+1. Téléchargez le fichier `elasticpress-french-addon.zip` de la dernière release.
+2. Dans l’admin WordPress : **Extensions > Ajouter > Téléverser une extension**,
+   ou décompressez le ZIP dans `wp-content/plugins/`.
+3. Activez le plugin, puis réindexez :
+
+```bash
+wp plugin activate elasticpress-french-addon
+wp elasticpress index --setup --network-wide
+```
+
+### Via Git
+
 ```bash
 cd wp-content/plugins
-git clone https://github.com/beapi/elasticpress-french-addon.git
+git clone https://github.com/BeAPI/elasticpress-french-addon.git
 wp plugin activate elasticpress-french-addon
 wp elasticpress index --setup --network-wide
 ```
@@ -79,8 +140,8 @@ Scripts Composer utiles :
 
 Les hooks Git de qualité (GrumPHP) s’installent avec Composer. Sur une PR, le workflow
 `.github/workflows/quality.yml` lance `composer validate` et `composer cs`.
-Un tag Git déclenche le déploiement WordPress.org (`.github/workflows/release-version.yml`) ;
-le fichier `.distignore` exclut les artefacts de développement du ZIP.
+Un tag Git déclenche une release GitHub avec le ZIP (`.github/workflows/release-version.yml`) ;
+le fichier `.distignore` exclut les artefacts de développement du package.
 
 Après un changement de réglages du mapping, réindexer :
 

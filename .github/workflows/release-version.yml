@@ -1,30 +1,34 @@
-name: Deploy to WordPress.org
+name: GitHub Release
 
 on:
   push:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
-  deploy:
-    name: Deploy to WordPress.org
+  release:
+    name: Build ZIP and publish release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Publish to WP.org
-        uses: 10up/action-wordpress-plugin-deploy@stable
-        with:
-          generate-zip: true
+      - name: Build plugin ZIP
         env:
-          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
-          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
-          SLUG: elasticpress-french-addon
+          PLUGIN_SLUG: elasticpress-french-addon
+        run: |
+          mkdir -p "/tmp/${PLUGIN_SLUG}"
+          rsync -a --exclude-from=.distignore ./ "/tmp/${PLUGIN_SLUG}/"
+          (
+            cd /tmp
+            zip -r "${GITHUB_WORKSPACE}/${PLUGIN_SLUG}.zip" "${PLUGIN_SLUG}"
+          )
 
-      - name: Upload release asset
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: ${{ github.workspace }}/elasticpress-french-addon.zip
+          files: elasticpress-french-addon.zip
+          generate_release_notes: true

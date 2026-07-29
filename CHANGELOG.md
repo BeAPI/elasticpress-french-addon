@@ -22,7 +22,7 @@ Initial public release.
 - Extensibility filter `epfr_mapping` for advanced mapping tweaks.
 - Local DDEV stack, search corpus fixtures, and Composer verify/compare scripts.
 - French gettext translations (`languages/`).
-- CI quality workflow and WordPress.org release workflow.
+- CI quality workflow and GitHub Release ZIP workflow (tag → `elasticpress-french-addon.zip`).
 
 ### Notes
 
