@@ -30,8 +30,9 @@ exclusions de stemming, et mode dual light/heavy optionnel (index posts uniqueme
 
 **Ce que fait le plugin :**
 
-* Remplace `ep_asciifolding` (après Snowball) par un `asciifolding` placé après les
-  stopwords et avant le stemming, pour que accents et racinisation travaillent
+* Remplace `ep_asciifolding` (`preserve_original: true`, après Snowball — double token
+  accentué + ASCII) par un `asciifolding` natif (une seule forme ASCII) placé après
+  les stopwords et avant le stemming, pour que accents et racinisation travaillent
   correctement ensemble.
 * Ajoute la gestion de l'élision française (l'article, d'un, qu'il...).
 * Permet de choisir le niveau de racinisation (aucun, minimal, léger, complet) au lieu

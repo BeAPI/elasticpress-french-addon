@@ -48,8 +48,8 @@ Ordre réel reconstruit par `build_analyzer()` (mode **full**, réglages par dé
 | 7 | `epfr_stemmer` | Racinisation (`light_french` par défaut) |
 
 Le stemmer Snowball / native déjà présent dans la chaîne EP est **retiré**, puis remplacé
-par `epfr_stemmer` si un niveau de stemming est choisi. `ep_asciifolding` (avec
-`preserve_original`) est également retiré lorsque notre `asciifolding` est actif.
+par `epfr_stemmer` si un niveau de stemming est choisi. `ep_asciifolding` est également
+retiré lorsque notre `asciifolding` est actif (voir ci-dessous).
 
 ## Détail des leviers
 
@@ -63,9 +63,21 @@ Placé **en tête** de chaîne (comme l’analyzer `french` officiel), avant `lo
 
 ### Asciifolding (`asciifolding`)
 
-Inséré **après** `ep_stop` (et `epfr_extra_stop` le cas échéant), avant les filtres
-tiers et le stemming. Si l’option est désactivée, les filtres `asciifolding` /
-`ep_asciifolding` éventuellement présents sont retirés.
+ElasticPress définit un filtre nommé `ep_asciifolding` :
+
+```json
+{ "type": "asciifolding", "preserve_original": true }
+```
+
+Avec `preserve_original`, chaque token accentué produit **deux** formes (`café` →
+`café` + `cafe`). Le filtre natif `asciifolding` (celui que cet addon injecte)
+remplace au contraire la forme accentuée : une seule forme ASCII reste dans le flux.
+
+L’addon retire donc `ep_asciifolding` et insère `asciifolding` **après** `ep_stop`
+(et `epfr_extra_stop` le cas échéant), avant les filtres tiers et le stemming — pour
+éviter le double token et pour que accents et racinisation travaillent correctement
+ensemble. Si l’option est désactivée, les filtres `asciifolding` / `ep_asciifolding`
+éventuellement présents sont retirés.
 
 Placer le folding *avant* les stopwords casserait la liste `_french_` (formes
 accentuées : `même`, `était`, `où`…) : les tokens arriveraient déjà repliés et ne

@@ -20,8 +20,10 @@ sans casser la liste `_french_`.
 Le mapping ElasticPress par défaut (EP ≥ 4, mappings `5-2` / `7-0`+) n'est pas optimisé
 pour le français :
 
-- `ep_asciifolding` est déjà présent sur `default` / `default_search`, mais **après**
-  `ewp_snowball` → le stemming travaille sur des formes accentuées ;
+- `ep_asciifolding` (`type: asciifolding`, `preserve_original: true`) est déjà présent
+  sur `default` / `default_search`, mais **après** `ewp_snowball` → le stemming travaille
+  sur des formes accentuées, et chaque token accentué émet aussi sa forme ASCII
+  (double token) ;
 - le stemmer par défaut est un `snowball` French, réputé agressif (troncature fréquente à
   4-5 lettres), qui crée des collisions entre mots sans rapport ;
 - aucune gestion de l'élision française.
@@ -234,7 +236,8 @@ Réglable dans **ElasticPress > French Addon** (menu site, ou **Network Admin** 
 ElasticPress est en mode `EP_IS_NETWORK`), ou directement en base via `epfr_settings`
 (option de blog, ou `site_option` en mode réseau) :
 
-- `asciifolding` (bool) : ignore les accents à l'indexation et à la recherche.
+- `asciifolding` (bool) : ignore les accents à l'indexation et à la recherche (filtre
+  natif `asciifolding`, sans `preserve_original` — remplace `ep_asciifolding`).
 - `elision` (bool) : gère l'élision française (l', d', qu'...).
 - `stemmer` (`none` | `minimal_french` | `light_french` | `french`) : niveau de racinisation.
 - `fuzziness` (`auto` | `0` | `1` | `2`) : tolérance aux fautes de frappe.
