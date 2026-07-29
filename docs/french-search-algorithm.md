@@ -207,7 +207,7 @@ Attendu avec les défauts : les trois formes « Haïti » partagent le même tok
 `haute`, `fait` ne doivent plus collapser vers une racine proche de `haiti`.
 
 Scripts locaux utiles : `ddev composer verify:options`, `verify:corpus`, `compare:corpus`.
-Tests unitaires (chaîne `build_analyzer`) : `composer test`.
+Tests unitaires (chaîne `build_analyzer`, injection query `.stemmed`, fuzziness) : `composer test`.
 
 ## Références
 

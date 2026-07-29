@@ -136,7 +136,7 @@ Scripts Composer utiles :
 | `ddev composer setup:plugins` | Symlink + activation des plugins, Query Monitor et EP Debugging |
 | `ddev composer setup:ep` | Configure le host ES et relance la sync |
 | `ddev composer cs` | Vérifie les WordPress Coding Standards (PHPCS) |
-| `ddev composer test` | Lance les tests unitaires PHPUnit (`build_analyzer` / `build_filters`) |
+| `ddev composer test` | Lance les tests unitaires PHPUnit (`build_analyzer` / `build_filters` / injection query `.stemmed` / fuzziness) |
 | `ddev composer cbf` | Corrige automatiquement ce que PHPCBF peut fixer |
 | `ddev composer fetch:bulk` | Télécharge ~980 extraits Wikipédia FR (CC BY-SA) |
 | `ddev composer seed:corpus` | Crée ~1000 posts de test (pièges + bulk) |
