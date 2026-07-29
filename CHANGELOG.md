@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] — 2026-07-29
+
+### Fixed
+
+- Detect network mode only via `EP_IS_NETWORK` (same as ElasticPress). A missing or false constant keeps the French Addon menu and settings storage per site, instead of inferring network mode from plugin network-activation.
+
 ### Added
 
 - PHPUnit coverage for `filter_formatted_args()` (`.stemmed` injection) and `filter_fuzziness()`.

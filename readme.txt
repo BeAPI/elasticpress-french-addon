@@ -4,7 +4,7 @@ Tags: elasticpress, elasticsearch, search, french, i18n
 Requires at least: 6.5
 Tested up to: 6.9
 Requires PHP: 8.0
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Requires Plugins: elasticpress
@@ -100,6 +100,10 @@ ElasticPress de l'administration réseau.
 == Changelog ==
 
 Historique détaillé (GitHub) : https://github.com/beapi/elasticpress-french-addon/blob/main/CHANGELOG.md
+
+= 1.0.2 =
+* Détection du mode réseau uniquement via EP_IS_NETWORK (menu site par site si absente/false).
+* Tests PHPUnit pour filter_formatted_args() et filter_fuzziness().
 
 = 1.0.1 =
 * Correctif stopwords accentués : asciifolding après ep_stop, retrait de ep_asciifolding.

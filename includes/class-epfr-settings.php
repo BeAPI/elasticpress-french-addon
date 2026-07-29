@@ -40,23 +40,12 @@ class Settings {
 	/**
 	 * Whether ElasticPress is running in network-wide mode.
 	 *
-	 * Falls back to checking whether ElasticPress is network-activated when the
-	 * EP_IS_NETWORK constant is not yet defined (e.g. during plugin activation).
+	 * Must match ElasticPress itself: only EP_IS_NETWORK (when true). Do not
+	 * infer from network activation — EP may leave the constant undefined on a
+	 * multisite and still show its UI per site.
 	 */
 	public static function is_network_mode(): bool {
-		if ( defined( 'EP_IS_NETWORK' ) && EP_IS_NETWORK ) {
-			return true;
-		}
-
-		if ( ! is_multisite() ) {
-			return false;
-		}
-
-		if ( ! function_exists( 'is_plugin_active_for_network' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/plugin.php';
-		}
-
-		return is_plugin_active_for_network( 'elasticpress/elasticpress.php' );
+		return defined( 'EP_IS_NETWORK' ) && EP_IS_NETWORK;
 	}
 
 	/**
