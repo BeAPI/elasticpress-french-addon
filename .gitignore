@@ -1,0 +1,20 @@
+# Local WordPress install (DDEV docroot)
+/wordpress/
+
+# Composer
+/vendor/
+/composer.phar
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-*
+
+# Logs / caches
+*.log
+.phpunit.result.cache
+.phpcs-cache

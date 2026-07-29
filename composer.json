@@ -1,0 +1,101 @@
+{
+    "name": "beapi/elasticpress-french-addon",
+    "description": "ElasticPress addon that improves Elasticsearch analysis for French content.",
+    "type": "wordpress-plugin",
+    "version": "1.0.0",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Be API",
+            "homepage": "https://beapi.fr"
+        }
+    ],
+    "require": {
+        "php": ">=8.0"
+    },
+    "require-dev": {
+        "composer/installers": "^2.3",
+        "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+        "overtrue/phplint": "^3.0 || ^9.0",
+        "php-parallel-lint/php-parallel-lint": "^1.4",
+        "phpcompatibility/php-compatibility": "^9.3",
+        "phpro/grumphp-shim": "^1.0 || ^2.7",
+        "squizlabs/php_codesniffer": "^3.10",
+        "wp-coding-standards/wpcs": "^3.1",
+        "wpackagist-plugin/elasticpress": "^5.3"
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://wpackagist.org",
+            "only": [
+                "wpackagist-plugin/*",
+                "wpackagist-theme/*"
+            ]
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "composer/installers": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpro/grumphp-shim": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "installer-paths": {
+            "wordpress/wp-content/plugins/{$name}/": [
+                "type:wordpress-plugin"
+            ]
+        }
+    },
+    "scripts": {
+        "cs": "./vendor/bin/phpcs",
+        "cbf": "./vendor/bin/phpcbf",
+        "setup": [
+            "@composer install",
+            "@setup:wp",
+            "@setup:plugins",
+            "@setup:ep"
+        ],
+        "setup:wp": [
+            "test -f wordpress/wp-includes/version.php || wp core download --path=wordpress --locale=fr_FR",
+            "test -f wordpress/wp-config.php || wp config create --path=wordpress --dbname=db --dbuser=db --dbpass=db --dbhost=db --skip-check",
+            "wp core is-installed --path=wordpress || wp core install --path=wordpress --url=https://elasticpress-french-addon.ddev.site --title='ElasticPress French Addon' --admin_user=admin --admin_password=admin --admin_email=admin@example.com --skip-email"
+        ],
+        "setup:plugins": [
+            "mkdir -p wordpress/wp-content/plugins",
+            "ln -sfn \"$(pwd)\" wordpress/wp-content/plugins/elasticpress-french-addon",
+            "wp plugin activate elasticpress elasticpress-french-addon --path=wordpress"
+        ],
+        "setup:ep": [
+            "wp config set EP_HOST 'http://elasticsearch:9200' --path=wordpress",
+            "curl -sf --retry 30 --retry-delay 2 --retry-all-errors http://elasticsearch:9200 >/dev/null",
+            "wp elasticpress sync --setup --yes --path=wordpress"
+        ],
+        "fetch:bulk": "php bin/fetch-bulk-corpus.php --count=980",
+        "seed:corpus": "wp eval-file bin/seed-search-corpus.php --path=wordpress",
+        "verify:corpus": "wp eval-file bin/verify-search-corpus.php epfr-profile-addon --path=wordpress",
+        "compare:corpus": [
+            "wp eval-file bin/seed-search-corpus.php epfr-purge --path=wordpress",
+            "wp eval-file bin/toggle-addon.php epfr-enabled-0 --path=wordpress",
+            "wp elasticpress sync --setup --yes --path=wordpress",
+            "wp eval-file bin/verify-search-corpus.php epfr-profile-baseline --path=wordpress",
+            "wp eval-file bin/toggle-addon.php epfr-enabled-1 --path=wordpress",
+            "wp elasticpress sync --setup --yes --path=wordpress",
+            "wp eval-file bin/verify-search-corpus.php epfr-profile-addon --path=wordpress"
+        ]
+    },
+    "scripts-descriptions": {
+        "cs": "Run PHPCS with the project WordPress coding standards ruleset.",
+        "cbf": "Auto-fix PHPCS issues with PHPCBF where possible.",
+        "setup": "Bootstrap WordPress, ElasticPress, and this addon for local DDEV use.",
+        "setup:wp": "Download and install WordPress into wordpress/ if missing.",
+        "setup:plugins": "Symlink this addon and activate ElasticPress + the addon.",
+        "setup:ep": "Point ElasticPress at the DDEV Elasticsearch service and run an initial sync.",
+        "fetch:bulk": "Download ~980 French Wikipedia extracts into tests/fixtures/french-search-bulk.json.gz.",
+        "seed:corpus": "Create or update ~1000 corpus posts (traps + bulk) without inline EP sync.",
+        "verify:corpus": "Run trap search assertions against ElasticPress (addon profile).",
+        "compare:corpus": "Purge/reseed corpus, then baseline vs addon verify (2× sync --setup)."
+    }
+}

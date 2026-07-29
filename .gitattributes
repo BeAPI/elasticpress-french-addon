@@ -1,0 +1,17 @@
+.git export-ignore
+.gitignore export-ignore
+.github export-ignore
+.distignore export-ignore
+.gitattributes export-ignore
+.ddev export-ignore
+.wordpress-org export-ignore
+bin export-ignore
+tests export-ignore
+wordpress export-ignore
+composer.json export-ignore
+composer.lock export-ignore
+grumphp.yml export-ignore
+phpcs.xml export-ignore
+README.md export-ignore
+
+composer.lock -diff

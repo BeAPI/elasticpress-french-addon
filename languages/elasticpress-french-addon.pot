@@ -1,0 +1,143 @@
+# Copyright (C) 2026 Be API
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: ElasticPress French Addon 1.0.0\n"
+"Report-Msgid-Bugs-To: https://github.com/beapi/elasticpress-french-addon/issues\n"
+"POT-Creation-Date: 2026-07-28 14:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: elasticpress-french-addon\n"
+
+#: elasticpress-french-addon.php
+msgid "ElasticPress French Addon requires the ElasticPress plugin to be installed and activated."
+msgstr ""
+
+#: elasticpress-french-addon.php
+msgid "ElasticPress French Addon is active."
+msgstr ""
+
+#: elasticpress-french-addon.php
+msgid "A full reindex is required for the new analyzer settings to take effect (wp elasticpress index --setup --network-wide). A simple sync is not enough."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "French Addon"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "ElasticPress French Addon"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Any change below only applies to new indexes. A full reindex is required after saving:"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "While the addon is enabled, the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the ElasticPress Language setting."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "ElasticPress French Addon is active: the Elasticsearch analyzer language is forced to French (including stopwords), regardless of the Language setting below. <a href=\"%s\">Manage French Addon settings</a>."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Addon enabled"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Apply French corrections to the ElasticPress analyzer"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Asciifolding"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Ignore accents at index and search time (recommended: \"haiti\" and \"haïti\" should return the same results)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Elision"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Handle French elision (l'article, d'un, qu'il…)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Stemmer"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "None (exact matches only)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Minimal (obvious plurals only)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Light (recommended — plurals, feminine forms, simple conjugations)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Full Snowball (aggressive — risk of collisions between distinct words)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "The \"Full Snowball\" stemmer often truncates words to 4–5 letters and can return unrelated results (e.g. \"haine\" and \"haute\" confused with \"Haïti\"). \"Light\" is the best compromise for most sites."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Fuzziness (typo tolerance)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Auto (ElasticPress default)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "0 — Disabled (strict matching)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "1 — Tolerate one typo"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "2 — Tolerate two typos"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Lower this only if asciifolding and the light stemmer are not enough to remove noise from results."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Additional stopwords"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Comma-separated list of words to ignore on top of the standard French list (e.g. company name if too frequent in content)."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Verify the result"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "After reindexing, test the analyzer directly via the Elasticsearch API:"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "All three forms should produce the same token."
+msgstr ""
+
+#: elasticpress-french-addon.php
+msgid "Fixes and optimizes the ElasticPress analyzer for French: asciifolding, elision, configurable stemmer, extra stopwords, fuzziness. Notably fixes the classic bug where accent-free searches return unrelated results."
+msgstr ""

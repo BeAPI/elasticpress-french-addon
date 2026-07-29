@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "description": "Handcrafted French search traps for ElasticPress French Addon. Assertions only; bulk Wikipedia excerpts provide ranking noise.",
+  "posts": [
+    {
+      "slug": "epfr-haiti",
+      "title": "Voyage à Haïti",
+      "content": "Reportage sur Port-au-Prince et les côtes d'Haïti. Ce texte doit matcher une recherche sans accent sur haiti."
+    },
+    {
+      "slug": "epfr-haine",
+      "title": "La haine au cinéma",
+      "content": "Analyse du film La Haine et du thème de la violence urbaine dans la société contemporaine."
+    },
+    {
+      "slug": "epfr-haute",
+      "title": "Haute couture parisienne",
+      "content": "Histoire de la haute couture à Paris, des ateliers et des défilés de mode."
+    },
+    {
+      "slug": "epfr-fait",
+      "title": "Le fait divers du jour",
+      "content": "Chronique d'un fait divers ordinaire rapporté par la presse régionale."
+    },
+    {
+      "slug": "epfr-lamour",
+      "title": "L'amour dans la littérature",
+      "content": "Réflexions sur l'amour romantique chez les auteurs français du XIXe siècle."
+    },
+    {
+      "slug": "epfr-dhaiti",
+      "title": "Histoire d'Haïti contemporaine",
+      "content": "Panorama politique et culturel d'Haïti depuis l'indépendance. Élision sur d'Haïti."
+    },
+    {
+      "slug": "epfr-cheval",
+      "title": "Le cheval de trait",
+      "content": "Description du cheval de trait utilisé dans l'agriculture traditionnelle."
+    },
+    {
+      "slug": "epfr-chevaux",
+      "title": "Les chevaux de Camargue",
+      "content": "Reportage sur les chevaux blancs de Camargue et leur élevage."
+    },
+    {
+      "slug": "epfr-recherche",
+      "title": "La recherche scientifique ouverte",
+      "content": "Article sur la recherche ouverte, les prépublications et le partage des données."
+    },
+    {
+      "slug": "epfr-quappelle",
+      "title": "Qu'appelle-t-on un algorithme ?",
+      "content": "Définition pédagogique : qu'appelle-t-on exactement un algorithme en informatique ?"
+    },
+    {
+      "slug": "epfr-jusquici",
+      "title": "Jusqu'ici tout va bien",
+      "content": "Essai sur la phrase culte « jusqu'ici tout va bien » et son usage dans les médias."
+    },
+    {
+      "slug": "epfr-ete",
+      "title": "L'été en Provence",
+      "content": "Guide de voyage pour passer l'été en Provence, entre villages et calanques."
+    },
+    {
+      "slug": "epfr-cafe",
+      "title": "Le café de spécialité",
+      "content": "Initiation au café de spécialité : torréfaction, extraction et dégustation."
+    },
+    {
+      "slug": "epfr-croix",
+      "title": "La Croix-Rouge française",
+      "content": "Présentation de la Croix-Rouge et de ses missions humanitaires en France."
+    },
+    {
+      "slug": "epfr-croissant",
+      "title": "Recette du croissant au beurre",
+      "content": "Pas à pas pour réussir un croissant feuilleté au beurre à la maison."
+    },
+    {
+      "slug": "epfr-oeuvre",
+      "title": "Une œuvre majeure du Louvre",
+      "content": "Focus sur une œuvre exposée au Louvre et son contexte historique."
+    },
+    {
+      "slug": "epfr-naif",
+      "title": "L'art naïf en France",
+      "content": "Panorama de l'art naïf français, de ses peintres et de ses collections."
+    },
+    {
+      "slug": "epfr-controle",
+      "title": "Le contrôle qualité industriel",
+      "content": "Méthodes de contrôle qualité dans l'industrie manufacturière française."
+    }
+  ],
+  "queries": [
+    {
+      "id": "accent-free-haiti",
+      "case": "asciifolding",
+      "s": "haiti",
+      "fuzziness": 0,
+      "expect_include": ["epfr-haiti", "epfr-dhaiti"],
+      "expect_exclude": ["epfr-haine", "epfr-haute", "epfr-fait"]
+    },
+    {
+      "id": "accented-haiti",
+      "case": "asciifolding",
+      "s": "haïti",
+      "fuzziness": 0,
+      "expect_include": ["epfr-haiti", "epfr-dhaiti"],
+      "expect_exclude": ["epfr-haine", "epfr-haute", "epfr-fait"]
+    },
+    {
+      "id": "elision-amour",
+      "case": "elision",
+      "s": "amour",
+      "expect_include": ["epfr-lamour"],
+      "expect_exclude": []
+    },
+    {
+      "id": "elision-algorithme",
+      "case": "elision",
+      "s": "algorithme",
+      "expect_include": ["epfr-quappelle"],
+      "expect_exclude": []
+    },
+    {
+      "id": "stemming-cheval",
+      "case": "stemming",
+      "s": "cheval",
+      "expect_include": ["epfr-cheval", "epfr-chevaux"],
+      "expect_exclude": []
+    },
+    {
+      "id": "fuzziness-recherche",
+      "case": "fuzziness",
+      "s": "rechreche",
+      "expect_include": ["epfr-recherche"],
+      "expect_exclude": []
+    },
+    {
+      "id": "accent-free-ete",
+      "case": "asciifolding",
+      "s": "ete",
+      "fuzziness": 0,
+      "expect_include": ["epfr-ete"],
+      "expect_exclude": []
+    },
+    {
+      "id": "accent-free-cafe",
+      "case": "asciifolding",
+      "s": "cafe",
+      "fuzziness": 0,
+      "expect_include": ["epfr-cafe"],
+      "expect_exclude": []
+    },
+    {
+      "id": "stemmer-collision-negative",
+      "case": "stemmer_collision",
+      "s": "haiti",
+      "fuzziness": 0,
+      "expect_include": ["epfr-haiti"],
+      "expect_exclude": ["epfr-haine", "epfr-haute", "epfr-fait", "epfr-croissant"]
+    },
+    {
+      "id": "brand-like-croix",
+      "case": "stemming",
+      "s": "croix",
+      "fuzziness": 0,
+      "expect_include": ["epfr-croix"],
+      "expect_exclude": []
+    }
+  ]
+}

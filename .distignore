@@ -1,0 +1,52 @@
+# Version control
+.distignore
+.git
+.gitignore
+.gitattributes
+.github
+
+# Documentation (keep readme.txt for WordPress.org)
+CHANGELOG.md
+LICENSE.md
+README.md
+
+# Composer
+composer.json
+composer.lock
+vendor
+
+# Code quality tools
+phpcs.xml
+grumphp.yml
+.phpcs.xml.dist
+.phpcs-cache
+
+# Tests and local scripts
+tests/
+bin/
+phpunit.xml
+phpunit.xml.dist
+.phpunit.result.cache
+.phpunit.cache
+coverage
+coverage.xml
+clover.xml
+
+# Local WordPress / DDEV / wp-env
+.ddev/
+wordpress/
+.wp-env.json
+.wp-env.home.json
+.wp-env.override.json
+
+# IDE and editors
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Build / logs
+*.log
