@@ -123,7 +123,27 @@ msgid "Additional stopwords"
 msgstr ""
 
 #: includes/class-epfr-admin.php
-msgid "Comma-separated list of words to ignore on top of the standard French list (e.g. company name if too frequent in content)."
+msgid "Comma-separated list of words to ignore on top of the <a href=\"%1$s\" target=\"_blank\" rel=\"noopener noreferrer\">standard French stopword list</a> (see also the <a href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">direct Lucene source file</a>) (e.g. company name if too frequent in content)."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Stem exclusion"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Comma-separated words that must not be stemmed (keyword_marker). Classic example: exclude \"croix\" so a search for \"croissant\" does not match the brand \"La Croix\". Has no effect when Stemmer is set to None."
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Dual analyzers (light / heavy)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Use a light analyzer on main text fields (precision) and a heavy stemmed analyzer on .stemmed multi-fields (recall)"
+msgstr ""
+
+#: includes/class-epfr-admin.php
+msgid "Inspired by the dual french_light / french_heavy approach. Applies to post_title, post_content, and post_excerpt. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
 msgstr ""
 
 #: includes/class-epfr-admin.php

@@ -21,6 +21,8 @@
         "phpcompatibility/php-compatibility": "^9.3",
         "phpro/grumphp-shim": "^1.0 || ^2.7",
         "squizlabs/php_codesniffer": "^3.10",
+        "wpackagist-plugin/debug-bar-elasticpress": "*",
+        "wpackagist-plugin/query-monitor": "*",
         "wp-coding-standards/wpcs": "^3.1",
         "wpackagist-plugin/elasticpress": "^5.3"
     },
@@ -66,7 +68,7 @@
         "setup:plugins": [
             "mkdir -p wordpress/wp-content/plugins",
             "ln -sfn \"$(pwd)\" wordpress/wp-content/plugins/elasticpress-french-addon",
-            "wp plugin activate elasticpress elasticpress-french-addon --path=wordpress"
+            "wp plugin activate elasticpress elasticpress-french-addon query-monitor debug-bar-elasticpress --path=wordpress"
         ],
         "setup:ep": [
             "wp config set EP_HOST 'http://elasticsearch:9200' --path=wordpress",
@@ -75,6 +77,7 @@
         ],
         "fetch:bulk": "php bin/fetch-bulk-corpus.php --count=980",
         "seed:corpus": "wp eval-file bin/seed-search-corpus.php --path=wordpress",
+        "verify:options": "php bin/verify-admin-options.php",
         "verify:corpus": "wp eval-file bin/verify-search-corpus.php epfr-profile-addon --path=wordpress",
         "compare:corpus": [
             "wp eval-file bin/seed-search-corpus.php epfr-purge --path=wordpress",
@@ -91,10 +94,11 @@
         "cbf": "Auto-fix PHPCS issues with PHPCBF where possible.",
         "setup": "Bootstrap WordPress, ElasticPress, and this addon for local DDEV use.",
         "setup:wp": "Download and install WordPress into wordpress/ if missing.",
-        "setup:plugins": "Symlink this addon and activate ElasticPress + the addon.",
+        "setup:plugins": "Symlink this addon and activate ElasticPress, Query Monitor, and the debugging addons.",
         "setup:ep": "Point ElasticPress at the DDEV Elasticsearch service and run an initial sync.",
         "fetch:bulk": "Download ~980 French Wikipedia extracts into tests/fixtures/french-search-bulk.json.gz.",
         "seed:corpus": "Create or update ~1000 corpus posts (traps + bulk) without inline EP sync.",
+        "verify:options": "Run functional checks for every French Addon admin option.",
         "verify:corpus": "Run trap search assertions against ElasticPress (addon profile).",
         "compare:corpus": "Purge/reseed corpus, then baseline vs addon verify (2× sync --setup)."
     }

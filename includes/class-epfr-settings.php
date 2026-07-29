@@ -32,6 +32,8 @@ class Settings {
 			'stemmer'         => 'light_french', // none | minimal_french | light_french | french
 			'fuzziness'       => 'auto',         // auto | 0 | 1 | 2
 			'extra_stopwords' => '',             // comma-separated list, in addition to _french_
+			'stem_exclusion'  => '',             // comma-separated words excluded from stemming
+			'dual_analyzers'  => false,          // light on main fields + heavy .stemmed multi-fields
 		];
 	}
 
@@ -71,7 +73,29 @@ class Settings {
 			'stemmer'         => in_array( $stemmer, $allowed_stemmers, true ) ? $stemmer : $defaults['stemmer'],
 			'fuzziness'       => in_array( $fuzziness, $allowed_fuzziness, true ) ? $fuzziness : $defaults['fuzziness'],
 			'extra_stopwords' => isset( $input['extra_stopwords'] ) ? sanitize_textarea_field( (string) $input['extra_stopwords'] ) : '',
+			'stem_exclusion'  => isset( $input['stem_exclusion'] ) ? sanitize_textarea_field( (string) $input['stem_exclusion'] ) : '',
+			'dual_analyzers'  => ! empty( $input['dual_analyzers'] ),
 		];
+	}
+
+	/**
+	 * Turn a comma-separated setting into a trimmed string array.
+	 *
+	 * @param  string $raw Comma-separated list.
+	 * @return string[]
+	 */
+	private static function csv_to_array( string $raw ): array {
+		if ( '' === $raw ) {
+			return [];
+		}
+		$words = array_map( 'trim', explode( ',', $raw ) );
+		$words = array_filter(
+			$words,
+			static function ( string $word ): bool {
+				return '' !== $word;
+			}
+		);
+		return array_values( $words );
 	}
 
 	/**
@@ -81,16 +105,30 @@ class Settings {
 	 */
 	public static function get_extra_stopwords_array(): array {
 		$settings = self::get();
-		if ( empty( $settings['extra_stopwords'] ) ) {
-			return [];
+		return self::csv_to_array( (string) ( $settings['extra_stopwords'] ?? '' ) );
+	}
+
+	/**
+	 * Turn the stem exclusion list (comma-separated text) into an ES array.
+	 *
+	 * @return string[]
+	 */
+	public static function get_stem_exclusion_array(): array {
+		$settings = self::get();
+		return self::csv_to_array( (string) ( $settings['stem_exclusion'] ?? '' ) );
+	}
+
+	/**
+	 * Whether dual light/heavy analyzers are active and meaningful.
+	 *
+	 * @param  array<string, mixed>|null $settings Optional settings snapshot.
+	 * @return bool
+	 */
+	public static function is_dual_analyzers_enabled( ?array $settings = null ): bool {
+		$settings = $settings ?? self::get();
+		if ( empty( $settings['enabled'] ) || empty( $settings['dual_analyzers'] ) ) {
+			return false;
 		}
-		$words = array_map( 'trim', explode( ',', $settings['extra_stopwords'] ) );
-		$words = array_filter(
-			$words,
-			static function ( string $word ): bool {
-				return '' !== $word;
-			}
-		);
-		return array_values( $words );
+		return 'none' !== ( $settings['stemmer'] ?? 'none' );
 	}
 }

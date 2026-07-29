@@ -124,8 +124,28 @@ msgid "Additional stopwords"
 msgstr "Stopwords additionnels"
 
 #: includes/class-epfr-admin.php
-msgid "Comma-separated list of words to ignore on top of the standard French list (e.g. company name if too frequent in content)."
-msgstr "Liste de mots à ignorer en plus de la liste standard française, séparés par des virgules (ex. : nom de l’entreprise s’il est trop fréquent dans le contenu)."
+msgid "Comma-separated list of words to ignore on top of the <a href=\"%1$s\" target=\"_blank\" rel=\"noopener noreferrer\">standard French stopword list</a> (see also the <a href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">direct Lucene source file</a>) (e.g. company name if too frequent in content)."
+msgstr "Liste de mots à ignorer en plus de la <a href=\"%1$s\" target=\"_blank\" rel=\"noopener noreferrer\">liste standard française de stopwords</a> (voir aussi le <a href=\"%2$s\" target=\"_blank\" rel=\"noopener noreferrer\">fichier source Lucene direct</a>), séparés par des virgules (ex. : nom de l’entreprise s’il est trop fréquent dans le contenu)."
+
+#: includes/class-epfr-admin.php
+msgid "Stem exclusion"
+msgstr "Exclusion du stemming"
+
+#: includes/class-epfr-admin.php
+msgid "Comma-separated words that must not be stemmed (keyword_marker). Classic example: exclude \"croix\" so a search for \"croissant\" does not match the brand \"La Croix\". Has no effect when Stemmer is set to None."
+msgstr "Mots exclus du stemming (keyword_marker), séparés par des virgules. Exemple classique : exclure « croix » pour qu’une recherche « croissant » ne remonte pas la marque « La Croix ». Sans effet si le stemmer est sur Aucun."
+
+#: includes/class-epfr-admin.php
+msgid "Dual analyzers (light / heavy)"
+msgstr "Analyzers duals (léger / heavy)"
+
+#: includes/class-epfr-admin.php
+msgid "Use a light analyzer on main text fields (precision) and a heavy stemmed analyzer on .stemmed multi-fields (recall)"
+msgstr "Utiliser un analyzer léger sur les champs texte principaux (pertinence) et un analyzer heavy stémmé sur les multi-fields .stemmed (rappel)"
+
+#: includes/class-epfr-admin.php
+msgid "Inspired by the dual french_light / french_heavy approach. Applies to post_title, post_content, and post_excerpt. Search queries automatically include the .stemmed fields at a lower boost. Has no effect when Stemmer is set to None. Requires a full reindex."
+msgstr "Inspiré de l’approche duale french_light / french_heavy. S’applique à post_title, post_content et post_excerpt. Les requêtes de recherche incluent automatiquement les champs .stemmed avec un boost réduit. Sans effet si le stemmer est sur Aucun. Réindexation complète obligatoire."
 
 #: includes/class-epfr-admin.php
 msgid "Verify the result"

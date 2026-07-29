@@ -19,9 +19,13 @@ absence de gestion de l'élision. Résultat typique : une recherche sans accent 
 remonte des résultats sans rapport ("haine", "haute", "fait"), alors que la même recherche
 avec accent ("haïti") fonctionne correctement.
 
-Ce plugin s'active comme un addon à ElasticPress et corrige ces trois points via le filtre
-natif `ep_config_mapping`, sans jamais toucher au coeur d'ElasticPress ni aux filtres déjà
-définis par d'autres plugins (synonymes, shingle, etc.).
+Ce plugin s'active comme un addon à ElasticPress et corrige ces points via les filtres
+natifs `ep_config_mapping` / `ep_post_mapping`, sans jamais toucher au coeur d'ElasticPress
+ni aux filtres déjà définis par d'autres plugins (synonymes, shingle, etc.).
+
+Il s'inspire de la documentation officielle des language analyzers Elasticsearch et de
+l'article JoliCode sur un bon analyzer français : base `french` (élision, stop,
+light_french), plus asciifolding, exclusions de stemming, et mode dual light/heavy optionnel.
 
 **Ce que fait le plugin :**
 
@@ -31,6 +35,8 @@ définis par d'autres plugins (synonymes, shingle, etc.).
 * Ajoute la gestion de l'élision française (l'article, d'un, qu'il...).
 * Permet de choisir le niveau de racinisation (aucun, minimal, léger, complet) au lieu
   du Snowball français imposé par défaut, souvent responsable de collisions non pertinentes.
+* Permet d'exclure des mots du stemming (`stem_exclusion`, ex. "croix" vs "croissant").
+* Mode dual optionnel : analyzer light (pertinence) + multi-fields `.stemmed` heavy (rappel).
 * Permet d'ajuster la fuzziness des requêtes (auto / stricte / 1 faute / 2 fautes).
 * Permet d'ajouter des stopwords additionnels sans toucher à la liste standard.
 
@@ -80,3 +86,5 @@ chaque site du réseau.
 
 = 1.0.0 =
 * Version initiale : asciifolding, élision, stemmer configurable, fuzziness, stopwords additionnels.
+* stem_exclusion (keyword_marker) et mode dual light/heavy optionnel.
+* Documentation des références ES / JoliCode.

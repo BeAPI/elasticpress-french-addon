@@ -42,6 +42,8 @@ $defaults = [
     'stemmer'         => 'light_french',
     'fuzziness'       => 'auto',
     'extra_stopwords' => '',
+    'stem_exclusion'  => '',
+    'dual_analyzers'  => false,
 ];
 
 if (class_exists('\\ElasticPress_French_Addon\\Settings')) {
@@ -58,10 +60,13 @@ $settings['enabled'] = ('1' === $enabled);
 
 if ('1' === $enabled) {
     // Restore recommended defaults when re-enabling for compare runs.
-    $settings['asciifolding'] = true;
-    $settings['elision']      = true;
-    $settings['stemmer']      = 'light_french';
-    $settings['fuzziness']    = 'auto';
+    $settings['asciifolding']    = true;
+    $settings['elision']         = true;
+    $settings['stemmer']         = 'light_french';
+    $settings['fuzziness']       = 'auto';
+    $settings['extra_stopwords'] = '';
+    $settings['stem_exclusion']  = '';
+    $settings['dual_analyzers']  = false;
 }
 
 update_option(EPFR_OPTION_KEY, $settings);

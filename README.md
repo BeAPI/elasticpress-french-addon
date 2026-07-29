@@ -5,6 +5,13 @@
 Addon open-source pour [ElasticPress](https://github.com/10up/ElasticPress) qui corrige et
 optimise l'analyzer Elasticsearch pour le contenu en langue française.
 
+Inspiré de la [documentation officielle des language analyzers](https://www.elastic.co/docs/reference/text-analysis/analysis-lang-analyzer)
+(chaîne `french` : élision, stop, `keyword_marker`, stemmer `light_french`) et de l’article
+[Construire un bon analyzer français pour Elasticsearch](https://jolicode.com/blog/construire-un-bon-analyzer-francais-pour-elasticsearch)
+(JoliCode). On part de cette base officielle, puis on **ajoute** volontairement
+l’`asciifolding` — absent de l’analyzer `french` natif — pour gérer accents et ligatures
+(`haïti`/`haiti`, `bœuf`/`boeuf`).
+
 **Prérequis :** WordPress 6.2+, PHP 8.0+, et le plugin [ElasticPress](https://wordpress.org/plugins/elasticpress/).
 
 ## Le problème
@@ -45,6 +52,10 @@ Cela installe WordPress dans `wordpress/`, télécharge ElasticPress via Compose
 symlinke cet addon, configure `EP_HOST` vers le service Elasticsearch DDEV, puis
 lance une sync initiale.
 
+Le setup active aussi `Query Monitor` et `ElasticPress Debugging Add-On` par
+défaut, pour inspecter les requêtes ElasticPress directement dans la barre
+d'admin WordPress.
+
 - Site : https://elasticpress-french-addon.ddev.site
 - Admin : `admin` / `admin`
 - Elasticsearch (depuis le conteneur web) : `http://elasticsearch:9200`
@@ -54,14 +65,15 @@ Scripts Composer utiles :
 
 | Commande | Description |
 |---|---|
-| `ddev composer setup` | Boot complet (WP + plugins + sync EP) |
+| `ddev composer setup` | Boot complet (WP + plugins de debug + sync EP) |
 | `ddev composer setup:wp` | Télécharge / installe WordPress si besoin |
-| `ddev composer setup:plugins` | Symlink + activation des plugins |
+| `ddev composer setup:plugins` | Symlink + activation des plugins, Query Monitor et EP Debugging |
 | `ddev composer setup:ep` | Configure le host ES et relance la sync |
 | `ddev composer cs` | Vérifie les WordPress Coding Standards (PHPCS) |
 | `ddev composer cbf` | Corrige automatiquement ce que PHPCBF peut fixer |
 | `ddev composer fetch:bulk` | Télécharge ~980 extraits Wikipédia FR (CC BY-SA) |
 | `ddev composer seed:corpus` | Crée ~1000 posts de test (pièges + bulk) |
+| `ddev composer verify:options` | Vérifie fonctionnellement chaque réglage de l’admin (mapping, analyse, requêtes) |
 | `ddev composer verify:corpus` | Exécute les requêtes pièges (profil addon) |
 | `ddev composer compare:corpus` | Compare baseline (addon off) vs addon (2× sync) |
 
@@ -89,6 +101,7 @@ Voir aussi [`tests/fixtures/ATTRIBUTION.md`](tests/fixtures/ATTRIBUTION.md).
 ddev composer fetch:bulk          # une fois (~980 extraits), ou pour régénérer
 ddev composer seed:corpus         # ~1000 posts, sans sync EP inline
 ddev wp elasticpress sync --setup --yes --path=wordpress
+ddev composer verify:options
 ddev composer verify:corpus
 ddev composer compare:corpus      # purge + reseed + 2× sync --setup : prévoir plusieurs minutes
 ```
@@ -112,25 +125,26 @@ ddev wp eval-file bin/verify-search-corpus.php epfr-profile-baseline --path=word
 
 ## Fonctionnement
 
-Le plugin s'accroche à trois filtres natifs d'ElasticPress, sans surcharger ni dupliquer
+Le plugin s'accroche aux filtres natifs d'ElasticPress, sans surcharger ni dupliquer
 son coeur :
 
 | Filtre ElasticPress | Usage dans ce plugin |
 |---|---|
-| `ep_config_mapping` | Injecte `asciifolding`, `elision`, un stemmer configurable et des stopwords additionnels dans les analyzers `default` et `default_search` |
+| `ep_config_mapping` | Injecte `asciifolding`, `elision`, stemmer, stopwords additionnels, `stem_exclusion` ; en mode dual, `default`/`default_search` restent light et `epfr_heavy` sert aux multi-fields |
+| `ep_post_mapping` | En mode dual, ajoute les multi-fields `.stemmed` sur `post_title`, `post_content`, `post_excerpt` |
+| `ep_formatted_args` (prio 25) | En mode dual, injecte les champs `.stemmed` (boost réduit) dans les `multi_match` **après** le weighting ElasticPress (prio 20), qui sinon les supprimerait |
 | `ep_analyzer_language` | Force la langue Elasticsearch à `french` (stopwords `_french_`, snowball `French`) tant que l'addon est activé, indépendamment du réglage ElasticPress Language |
 | `ep_post_fuzziness_arg` | Permet de fixer la fuzziness des requêtes (auto / 0 / 1 / 2) |
 
-Un filtre `epfr_mapping` est disponible pour ajuster le mapping final depuis un projet
-spécifique (ex : `stem_exclusion` sur un nom de marque qui collisionne avec un mot du
-dictionnaire courant).
+Un filtre `epfr_mapping` reste disponible pour les ajustements avancés (ex. `stemmer_override`).
+Pour une simple exclusion de stemming, préférez le réglage `stem_exclusion` de l’admin.
 
 ```php
 add_filter( 'epfr_mapping', function ( array $mapping, array $settings ) {
-    // Example: exclude a brand name from stemming.
-    $mapping['settings']['analysis']['filter']['epfr_keywords'] = [
-        'type'     => 'keyword_marker',
-        'keywords' => [ 'MyBrand' ],
+    // Example: custom stemmer overrides (advanced).
+    $mapping['settings']['analysis']['filter']['epfr_stemmer_override'] = [
+        'type'  => 'stemmer_override',
+        'rules' => [ 'croissant=>croisan' ],
     ];
     return $mapping;
 }, 10, 2 );
@@ -156,6 +170,8 @@ Réglable dans **ElasticPress > French Addon**, ou directement en base via l'opt
 - `stemmer` (`none` | `minimal_french` | `light_french` | `french`) : niveau de racinisation.
 - `fuzziness` (`auto` | `0` | `1` | `2`) : tolérance aux fautes de frappe.
 - `extra_stopwords` (string, séparé par virgules) : mots additionnels à ignorer.
+- `stem_exclusion` (string, séparé par virgules) : mots exclus du stemming (`keyword_marker`), ex. `croix` pour éviter la collision « La Croix » / « croissant ».
+- `dual_analyzers` (bool, défaut `false`) : analyzer light sur les champs principaux (pertinence) + heavy stémmé sur `.stemmed` (rappel). Opt-in ; réindex `--setup` obligatoire.
 
 ## Important
 
@@ -178,6 +194,34 @@ curl -s 'http://YOUR_CLUSTER:9200/YOUR_INDEX/_analyze' \
 
 Les trois premières formes doivent produire le même token ; "haine", "haute" et "fait" ne
 doivent plus être ramenés à une racine proche de "haiti".
+
+Avec `stem_exclusion=croix`, comparer :
+
+```bash
+curl -s 'http://YOUR_CLUSTER:9200/YOUR_INDEX/_analyze' \
+  -H 'Content-Type: application/json' \
+  -d '{"analyzer":"default","text":"La Croix croissant"}'
+```
+
+En mode dual, comparer l’analyzer light (`default`) et le champ stémmé :
+
+```bash
+curl -s 'http://YOUR_CLUSTER:9200/YOUR_INDEX/_analyze' \
+  -H 'Content-Type: application/json' \
+  -d '{"field":"post_content.stemmed","text":"tomates"}'
+```
+
+## Références
+
+Liste classée par utilité pour comprendre et étendre cet addon :
+
+1. **[Language analyzers (Elastic)](https://www.elastic.co/docs/reference/text-analysis/analysis-lang-analyzer)** — source de vérité : définition reproductible de l’analyzer `french` natif. À privilégier sur tout blog tiers en cas de doute.
+2. **[Construire un bon analyzer français (JoliCode)](https://jolicode.com/blog/construire-un-bon-analyzer-francais-pour-elasticsearch)** — référence francophone : limites du french natif, dual light/heavy, pertinence vs rappel.
+3. **[Leviers Elasticsearch pour les spécificités linguistiques (blog Elastic FR)](https://www.elastic.co/fr/blog/leviers-elasticsearch-pour-le-traitement-des-specificites-linguistiques)** — cas concret `stem_exclusion` (« La Croix » / « croissant ») et `_analyze`.
+4. **[Analyzer reference](https://www.elastic.co/docs/reference/text-analysis/analyzer-reference)** — vue d’ensemble des analyzers (french, standard, keyword…).
+5. **[ASCII Folding et `_analyze` (Aymeric Lagier)](https://aymericlagier.com/2016/05/04/ascii-folding-dans-elasticsearch-et-appel-de-_analyze/)** — diagnostic via l’API `_analyze`.
+6. **[Elasticsearch: The Definitive Guide — Languages (O'Reilly)](https://www.oreilly.com/library/view/elasticsearch-the-definitive/9781449358532/part03ch01.html)** — pédagogique mais **historique** (ES 1.x/2.x) : l’affirmation selon laquelle le french retire les diacritiques ne correspond plus à l’implémentation actuelle (pas d’asciifolding dans le french stock).
+7. **[Discuss — Language analyzer en français](https://discuss.elastic.co/t/language-analyzer-en-francais/41045)** / **[Google Groups elasticsearch-fr](https://groups.google.com/g/elasticsearch-fr/c/MLYdicQ0xGo)** — compléments communautaires (pièges de config, démarche `_analyze`).
 
 ## Licence
 
